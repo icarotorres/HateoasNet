@@ -1,264 +1,53 @@
-# HateoasNet
+# HateoasNet [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8&metric=alert_status)](https://sonarcloud.io/dashboard?id=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8&metric=coverage)](https://sonarcloud.io/dashboard?id=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8) [![Build status](https://dev.azure.com/icarostuart/HateoasNet/_apis/build/status/HateoasNet%20CI-Build)](https://dev.azure.com/icarostuart/HateoasNet/_build/latest?definitionId=6) ![Deploy status](https://vsrm.dev.azure.com/icarostuart/_apis/public/Release/badge/95c0ead5-2af5-438e-a6c1-67a6151c2e98/1/1)
 
-A small hateoas libarry for .NET with fluent-like configuration and easey integrations
-with lambda expressions for building hateoas links with type mapping. Supports ease for 
-custom hateoas output implementations.
+HateoasNet is a lightweight library that provides a simple and efficient way to implement HATEOAS (Hypermedia as the Engine of Application State) in .NET C# projects. With HateoasNet, you can easily define and generate hypermedia links within your API responses, improving the discoverability and usability of your API.
 
-### Status
+## Table of Contents
+- [Installation](https://github.com/icarotorres/HateoasNet#installation)
+- [Features](https://github.com/icarotorres/HateoasNet#features)
+- [Usage Wiki](https://github.com/icarotorres/HateoasNet#usage-wiki)
+- [Examples](https://github.com/icarotorres/HateoasNet#examples)
+- [Contributing](https://github.com/icarotorres/HateoasNet#contributing)
+- [License](https://github.com/icarotorres/HateoasNet#license)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8&metric=alert_status)](https://sonarcloud.io/dashboard?id=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8)
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8&metric=coverage)](https://sonarcloud.io/dashboard?id=hateoas-net-f500510f-d3cc-4979-8ba0-2e70d2c15da8)
-[![Build status](https://dev.azure.com/icarostuart/HateoasNet/_apis/build/status/HateoasNet%20CI-Build)](https://dev.azure.com/icarostuart/HateoasNet/_build/latest?definitionId=6)
-![Deploy status](https://vsrm.dev.azure.com/icarostuart/_apis/public/Release/badge/95c0ead5-2af5-438e-a6c1-67a6151c2e98/1/1)
-![CI](https://github.com/IcaroTorres/HateoasNet/workflows/CI/badge.svg)
+## Installation
+The library targets NetCoreApp3.1 and Net Framework 4.72 and can be installed via NuGet package manager or by manually adding the package reference to your .NET Core project file.
 
-### Target Platforms
+### NuGet Package Manager
+1. Open your project in Visual Studio
+2. Right-click on the project and select "Manage NuGet Packages..."
+3. In the "Browse" tab, search for "HateoasNet"
+4. Select the package and click "Install"
 
-HateoasNet targets NetCoreApp3.1 and Net Framework 4.72.
+Or in the project directory, run one of the following command:
 
-### Get Started
-
-The latest stable version of HateoasNet can be installed using the Nuget package manager
+### .NET Core CLI
 ```
-Install-Package HateoasNet -Version <version>
+dotnet add package HateoasNet
 ```
-
-`Dotnet` CLI
+### .NET Framework
 ```
-dotnet add package HateoasNet --version <version>
-```
-
-or package reference.
-```
-<PackageReference Include="HateoasNet" Version="<version>" />
+Install-Package HateoasNet
 ```
 
----
+## Features
+- Flexible and customizable link generation
+- Easy integration with existing Web API projects
+- Lightweight and performance-focused design
+- Provides a fluent API for defining and generating links
 
-### Contributing
+## Usage Wiki
+Check out the [wiki](https://github.com/icarotorres/HateoasNet/wiki) in the project's GitHub repository to see HateoasNet usage defails and instructions.
 
-Before contributing, get started with our [Contributing guide](https://github.com/IcaroTorres/HateoasNet/blob/master/CONTRIBUTING.md).
+## Examples
+To see HateoasNet in action, check out the [examples](https://github.com/icarotorres/HateoasNet/tree/main/examples) directory in the project's GitHub repository. These examples demonstrate how to use HateoasNet in sample scenarios.
+
+
+## Contributing
+Contributions to the project are always welcome! If you find a bug or have a feature request, please open an issue on the GitHub repository. If you'd like to contribute code, please fork the repository and submit a pull request.
 
 ### Code of conduct
+Please note we have a [Code of conduct](https://github.com/IcaroTorres/HateoasNet/blob/main/CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.
 
-Please note we have a [Code of conduct](https://github.com/IcaroTorres/HateoasNet/blob/master/CODE_OF_CONDUCT.md), please follow it in all your interactions with the project.
-
----
-
-### Examples
-
-#### Inline configuration and integration
-
-```csharp
-using HateoasNet.DependencyInjection.Core;
-
-public void ConfigureServices(IServiceCollection services)
-{
-    // other registration...
-
-    services.ConfigureHateoas(context =>
-    {
-        return context.Configure<List<Member>>(members =>
-        {
-            members.AddLink("get-members");
-            members.AddLink("invite-member");
-            members.AddLink("create-member");
-        })
-
-        .Configure<Member>(member =>
-        {
-            member.AddLink("get-member").HasRouteData(e => new { id = e.Id });
-            member.AddLink("update-member").HasRouteData(e => new { id = e.Id });
-        })
-
-        .Configure<Member>(member =>
-        {
-            member.AddLink("get-guild")
-                .HasRouteData(e => new { id = e.GuildId })
-                .When(e => e.GuildId != null);
-
-            member.AddLink("promote-member")
-                .HasRouteData(e => new { id = e.Id })
-                .When(e => e.GuildId != null && !e.IsGuildMaster);
-
-            member.AddLink("demote-member")
-                .HasRouteData(e => new { id = e.Id })
-                .When(e => e.GuildId != null && e.IsGuildMaster);
-
-            member.AddLink("leave-guild")
-                .HasRouteData(e => new { id = e.Id })
-                .When(e => e.GuildId != null);
-        });
-    });
-
-    // other registrations...
-}
-```
-
-#### Configuration in separated class
-```csharp
-using HateoasNet.Abstractions;
-
-public class MemberHateoasBuilder : IHateoasSourceBuilder<Member>
-{
-    public void Build(IHateoasSource<Member> resource)
-    {
-        resource.AddLink("get-member").HasRouteData(e => new { id = e.Id });
-        resource.AddLink("update-member").HasRouteData(e => new { id = e.Id });
-
-        resource
-            .AddLink("get-guild")
-            .HasRouteData(e => new { id = e.GuildId })
-            .When(e => e.GuildId != null);
-
-        resource
-            .AddLink("promote-member")
-            .HasRouteData(e => new { id = e.Id })
-            .When(e => e.GuildId != null && !e.IsGuildMaster);
-
-        resource
-            .AddLink("demote-member")
-            .HasRouteData(e => new { id = e.Id })
-            .When(e => e.GuildId != null && e.IsGuildMaster);
-
-        resource.AddLink("leave-guild")
-                .HasRouteData(e => new { id = e.Id })
-                .When(e => e.GuildId != null);
-    }
-}
-```
-
-#### Integration calling IHateoasSourceBuilders
-```csharp
-using HateoasNet.DependencyInjection.Core;
-
-public void ConfigureServices(IServiceCollection services)
-{
-    // other registrations...
-
-    // setup applying map configurations from classes in separated files
-    services.ConfigureHateoas(context => context
-        .ApplyConfiguration(new GuildHateoasBuilder())
-        .ApplyConfiguration(new ListGuildHateoasBuilder())
-        .ApplyConfiguration(new MemberHateoasBuilder())
-        .ApplyConfiguration(new ListMemberHateoasBuilder())
-        .ApplyConfiguration(new InviteHateoasBuilder())
-        .ApplyConfiguration(new InvitesHateoasBuilder()));
-
-    // other registrations...
-}
-```
-
-#### Integration using assemblies
-```csharp
-using HateoasNet.DependencyInjection.Core;
-
-public void ConfigureServices(IServiceCollection services)
-{
-    // other registrations...
-
-    // setup applying configurations from IHateoasSourceBuilder implementations in separated files found in a given assembly
-    services.ConfigureHateoas(context => context.ConfigureFromAssembly(typeof(GuildHateoasBuilder).Assembly));
-
-    // other registrations...
-}
-```
-
-#### IHateoas Abstraction usage
-```csharp
-using HateoasNet;
-using System.Linq;
-using System.Collection.Generics;
-
-[ApiController]
-[Route("[controller]")]
-public class MembersController : ControllerBase
-{
-    private readonly IHateoas _hateoas;
-    private readonly List<Member> _members;
-
-    public MembersController(List<Member> members, IHateoas hateoas)
-    {
-        _hateoas = hateoas;
-        _members = members;
-    }
-
-    [HttpGet("{id:guid}", Name = "get-member")]
-    public IActionResult Get(Guid id)
-    {
-        var member = _members.SingleOrDefault(i => i.Id == id);
-        var links = _hateoas.Generate(member);
-        return member != null ? Ok(new { data = member, links }) : NotFound() as IActionResult;
-    }
-}
-```
-
-#### Sample of optional custom Hateoas output implementation
-```csharp
-using HateoasNet;
-using System.Linq;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-
-public class DictionaryHateoas : AbstractHateoas<ImmutableDictionary<string, object>>
-{
-    public DictionaryHateoas(IHateoas hateoas) : base(hateoas)
-    {
-    }
-
-    protected override ImmutableDictionary<string, object> GenerateCustom(IEnumerable<HateoasLink> links)
-    {
-        return links.ToImmutableDictionary(x => x.Rel, x => (object)new { x.Href, x.Method });
-    }
-}
-```
-
-#### Sample of optional custom Hateoas output registrations
-```csharp
-using HateoasNet.DependencyInjection.Core;
-
-public void ConfigureServices(IServiceCollection services)
-{
-    // other registrations...
-
-    // optional step to register all custom IHateoas<T> implementations in separated files found in a given assemblies
-    services.RegisterAllCustomHateoas(new Assembly[] { typeof(Startup).Assembly }, ServiceLifetime.Scoped)
-
-    // other registrations...
-}
-```
-
-#### Custom IHateoas<T> Abstraction usage
-```csharp
-using HateoasNet;
-using System.Linq;
-using System.Collections.Generic;
-
-[ApiController]
-[Route("[controller]")]
-public class GuildsController : ControllerBase
-{
-    private readonly IHateoas<ImmutableDictionary<string, object>> _hateoas;
-    private readonly List<Guild> _guilds;
-
-    public GuildsController(List<Guild> guilds, IHateoas<ImmutableDictionary<string, object>> hateoas)
-    {
-        _hateoas = hateoas;
-        _guilds = guilds;
-    }
-
-    [HttpGet("{id:guid}", Name = "get-guild")]
-    public IActionResult Get(Guid id)
-    {
-        var guild = _guilds.SingleOrDefault(i => i.Id == id);
-        var links = _hateoas.Generate(guild);
-        return guild != null ? Ok(new { data = guild, links }) : NotFound() as IActionResult;
-    }
-}
-```
-
----
-
-### Credits
-
-Project conceived by [@icarotorres](https://github.com/icarotorres "author's profile") : icaro.stuart@gmail.com, then owner of this repository.
+## License
+HateoasNet is licensed under the [MIT License](https://github.com/icarotorres/HateoasNet/blob/main/LICENSE).
