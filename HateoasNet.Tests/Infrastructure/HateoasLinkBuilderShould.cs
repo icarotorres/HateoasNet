@@ -1,9 +1,13 @@
-﻿using FluentAssertions;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using FluentAssertions;
 using HateoasNet.Abstractions;
 using HateoasNet.Extensions;
 using HateoasNet.Infrastructure;
 using HateoasNet.Tests.TestHelpers;
-using System;
 using Xunit;
 
 namespace HateoasNet.Tests.Infrastructure
@@ -25,16 +29,16 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasLinkBuilder), "Instance")]
         public void HaveNotNullValues_For_RouteName_And_RouteDictionaryFunction_And_PredicateFunction()
         {
-            _sut.RouteName.Should().NotBeEmpty();
-            _sut.RouteDictionaryFunction.Should().NotBeNull();
-            _sut.Predicate.Should().NotBeNull();
+            _ = _sut.RouteName.Should().NotBeEmpty();
+            _ = _sut.RouteDictionaryFunction.Should().NotBeNull();
+            _ = _sut.Predicate.Should().NotBeNull();
         }
 
         [Fact]
         [Trait(nameof(IHateoasLinkBuilder), "Instance")]
         public void New_WithValidParameters_ReturnsHateoasLink()
         {
-            _sut.Should()
+            _ = _sut.Should()
                 .BeAssignableTo<IHateoasLinkBuilder>().And
                 .BeAssignableTo<IHateoasLinkBuilder<HateoasSample>>().And
                 .BeOfType<HateoasLinkBuilder<HateoasSample>>();
@@ -45,9 +49,9 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasLinkBuilder), nameof(IHateoasLinkBuilder<HateoasSample>.RouteDictionaryFunction))]
         public void HasRouteData_WithValidRouteDataFunction_ReturnIHateoasLink()
         {
-            _sut.HasRouteData(x => new { id = x.Id, foreignKey = x.ForeignKeyId });
+            _ = _sut.HasRouteData(x => new { id = x.Id, foreignKey = x.ForeignKeyId });
 
-            _sut.RouteDictionaryFunction.Should().NotBeNull();
+            _ = _sut.RouteDictionaryFunction.Should().NotBeNull();
         }
 
         [Theory]
@@ -56,7 +60,7 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasLinkBuilder), nameof(IHateoasLinkBuilder<HateoasSample>.When))]
         public void IsApplicable_PredicateFunction_ReturnsSameValue(HateoasSample data, Func<HateoasSample, bool> function)
         {
-            _sut.When(function).IsApplicable(data).Should().Be(function(data));
+            _ = _sut.When(function).IsApplicable(data).Should().Be(function(data));
         }
 
         [Fact]
@@ -64,7 +68,7 @@ namespace HateoasNet.Tests.Infrastructure
         public void PresentedAs_PresentedName_ReturnsSameValue()
         {
             const string expected = "new-name";
-            _sut.PresentedAs(expected).PresentedName.Should().Be(expected);
+            _ = _sut.PresentedAs(expected).PresentedName.Should().Be(expected);
         }
 
         [Fact]
@@ -88,10 +92,13 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "source";
 
             // act
-            Action actual = () => _sut.GetRouteDictionary(null);
+            void actual()
+            {
+                _ = _sut.GetRouteDictionary(null);
+            }
 
             // assert
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
 
         [Fact]
@@ -103,10 +110,13 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "predicate";
 
             // act
-            Action actual = () => _sut.When(null);
+            void actual()
+            {
+                _ = _sut.When(null);
+            }
 
             // assert
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
 
         [Fact]
@@ -118,10 +128,13 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "routeDataFunction";
 
             // act
-            Action actual = () => _sut.HasRouteData(null);
+            void actual()
+            {
+                _ = _sut.HasRouteData(null);
+            }
 
             // assert
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
 
         [Fact]
@@ -133,10 +146,13 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "source";
 
             // act
-            Action actual = () => _sut.IsApplicable(null);
+            void actual()
+            {
+                _ = _sut.IsApplicable(null);
+            }
 
             // assert
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
     }
 }

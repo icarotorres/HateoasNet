@@ -1,8 +1,12 @@
-﻿using FluentAssertions;
-using HateoasNet.Abstractions;
-using HateoasNet.Infrastructure;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using FluentAssertions;
+using HateoasNet.Abstractions;
+using HateoasNet.Infrastructure;
 using Xunit;
 
 namespace HateoasNet.Tests.Infrastructure
@@ -26,7 +30,7 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasSource), "Instance")]
         public void New_WithTypeParameter_CreatesHateoasSource()
         {
-            _sut.Should()
+            _ = _sut.Should()
                 .BeAssignableTo<IHateoasSource>().And
                 .BeAssignableTo<IHateoasSource<HateoasSample>>().And
                 .BeOfType<HateoasSource<HateoasSample>>();
@@ -36,14 +40,14 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasSource), nameof(IHateoasSource.GetLinkBuilders))]
         public void GetLinks_FromHateoasSource_WithOutConfiguredLinks_ReturnsEmptyLinkBuilders()
         {
-            _sut.GetLinkBuilders().Should().BeAssignableTo<IEnumerable<IHateoasLinkBuilder>>().And.BeEmpty();
+            _ = _sut.GetLinkBuilders().Should().BeAssignableTo<IEnumerable<IHateoasLinkBuilder>>().And.BeEmpty();
         }
 
         [Fact]
         [Trait(nameof(IHateoasSource), nameof(IHateoasSource<HateoasSample>.AddLink))]
         public void HasLink_WithNotEmptyString_ReturnsHateoasLinkBuilder()
         {
-            _sut.AddLink("not empty string").Should()
+            _ = _sut.AddLink("not empty string").Should()
                 .NotBeNull().And
                 .BeAssignableTo<IHateoasLinkBuilder>().And
                 .BeAssignableTo<IHateoasLinkBuilder<HateoasSample>>().And
@@ -60,7 +64,7 @@ namespace HateoasNet.Tests.Infrastructure
                 .BeAssignableTo<IHateoasLinkBuilder<HateoasSample>>().And
                 .BeOfType<HateoasLinkBuilder<HateoasSample>>().Subject;
 
-            _sut.GetLinkBuilders().Should()
+            _ = _sut.GetLinkBuilders().Should()
                 .BeAssignableTo<IEnumerable<IHateoasLinkBuilder>>().And
                 .Contain(linkBuilder);
         }
@@ -77,9 +81,12 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "routeName";
 
             // act
-            Action actual = () => _sut.AddLink(routeName);
+            void actual()
+            {
+                _ = _sut.AddLink(routeName);
+            }
 
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
     }
 }

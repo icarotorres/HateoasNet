@@ -1,4 +1,8 @@
-﻿using HateoasNet.Abstractions;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using HateoasNet.Abstractions;
 using HateoasNet.Tests.TestHelpers;
 using Moq;
 using System;
@@ -49,12 +53,12 @@ namespace HateoasNet.Tests
 
         private void BuildSutDependencies<T>(T data, string routeName, string url, string method) where T : class
         {
-            _mockHateoasContext
+            _ = _mockHateoasContext
                 .SetupAllProperties()
                 .Setup(x => x.GetApplicableLinkBuilders(data))
                 .Returns(new IHateoasLinkBuilder[] { new HateoasLinkBuilder<T>(routeName) });
 
-            _mockUrlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns(url);
+            _ = _mockUrlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns(url);
 
             var actionDescriptors = new List<ActionDescriptor>
             {
@@ -65,7 +69,7 @@ namespace HateoasNet.Tests
                         {new HttpMethodActionConstraint(new List<string> {method})}
                 }
             };
-            _mockActionDescriptorCollectionProvider
+            _ = _mockActionDescriptorCollectionProvider
                 .Setup(x => x.ActionDescriptors)
                 .Returns(new ActionDescriptorCollection(actionDescriptors, 1));
 
@@ -85,7 +89,7 @@ namespace HateoasNet.Tests
             var links = _sut.Generate(data).ToArray();
 
             // assert
-            links.Should()
+            _ = links.Should()
                 .NotBeEmpty().And
                 .BeAssignableTo<IEnumerable<HateoasLink>>().And
                 .BeEquivalentTo(new HateoasLink[] { expected });
@@ -110,7 +114,7 @@ namespace HateoasNet.Tests
             var links = _sut.Generate(mockData.RouteValues).ToArray();
 
             // assert
-            links.Should()
+            _ = links.Should()
                 .NotBeEmpty().And
                 .BeAssignableTo<IEnumerable<HateoasLink>>().And
                 .BeEquivalentTo(new HateoasLink[] { expected });
@@ -131,10 +135,13 @@ namespace HateoasNet.Tests
             _sut = new Hateoas(_mockHateoasContext.Object);
 
             // act
-            Action actual = () => _sut.HandleRouteTemplate(mockData.ExpectedUrl, mockData.Template, mockData.RouteValues);
+            void actual()
+            {
+                _ = _sut.HandleRouteTemplate(mockData.ExpectedUrl, mockData.Template, mockData.RouteValues);
+            }
 
             // assert
-            Assert.Throws<InvalidOperationException>(actual);
+            _ = Assert.Throws<InvalidOperationException>(actual);
         }
 
         private void MockSutDependencies(HateoasTestData mockData)
@@ -147,11 +154,11 @@ namespace HateoasNet.Tests
         private void MockHateoasContext(HateoasTestData mockData)
         {
             var mockLinkBuilder = new Mock<IHateoasLinkBuilder<Dictionary<string, object>>>();
-            mockLinkBuilder.Setup(x => x.RouteName).Returns(mockData.RouteName);
-            mockLinkBuilder.Setup(x => x.PresentedName).Returns(mockData.RouteName);
-            mockLinkBuilder.Setup(x => x.GetRouteDictionary(It.IsAny<object>())).Returns(mockData.RouteValues);
+            _ = mockLinkBuilder.Setup(x => x.RouteName).Returns(mockData.RouteName);
+            _ = mockLinkBuilder.Setup(x => x.PresentedName).Returns(mockData.RouteName);
+            _ = mockLinkBuilder.Setup(x => x.GetRouteDictionary(It.IsAny<object>())).Returns(mockData.RouteValues);
 
-            _mockHateoasContext
+            _ = _mockHateoasContext
                 .SetupAllProperties()
                 .Setup(x => x.GetApplicableLinkBuilders(mockData.RouteValues))
                 .Returns(new IHateoasLinkBuilder[] { mockLinkBuilder.Object });
@@ -168,7 +175,7 @@ namespace HateoasNet.Tests
                 (collection, parameterName) =>
                 {
                     var mockParameterDescriptor = new Mock<HttpParameterDescriptor>();
-                    mockParameterDescriptor.Setup(x => x.ParameterName).Returns(parameterName);
+                    _ = mockParameterDescriptor.Setup(x => x.ParameterName).Returns(parameterName);
                     collection.Add(mockParameterDescriptor.Object);
                     return collection;
                 });

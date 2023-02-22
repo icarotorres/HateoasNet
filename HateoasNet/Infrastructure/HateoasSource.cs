@@ -1,6 +1,10 @@
-﻿using HateoasNet.Abstractions;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using HateoasNet.Abstractions;
 
 namespace HateoasNet.Infrastructure
 {
@@ -20,7 +24,11 @@ namespace HateoasNet.Infrastructure
 
         public IHateoasLinkBuilder<T> AddLink(string routeName)
         {
-            if (string.IsNullOrWhiteSpace(routeName)) throw new ArgumentNullException(nameof(routeName));
+            if (string.IsNullOrWhiteSpace(routeName))
+            {
+                throw new ArgumentNullException(nameof(routeName));
+            }
+
             var linkBuilder = new HateoasLinkBuilder<T>(routeName);
             _linkBuilders.Add(linkBuilder);
             return linkBuilder;

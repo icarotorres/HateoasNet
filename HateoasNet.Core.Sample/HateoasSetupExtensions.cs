@@ -1,8 +1,12 @@
-﻿using HateoasNet.Core.Sample.HateoasBuilders;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System.Collections.Generic;
+using HateoasNet.Core.Sample.HateoasBuilders;
 using HateoasNet.Core.Sample.Models;
 using HateoasNet.DependencyInjection.Core;
 using Microsoft.Extensions.DependencyInjection;
-using System.Collections.Generic;
 
 namespace HateoasNet.Core.Sample
 {
@@ -34,73 +38,73 @@ namespace HateoasNet.Core.Sample
                        // map All Api returns of type List<Guild> to links with no routeData and no conditional predicate
                        .Configure<List<Guild>>(guilds =>
                        {
-                           guilds.AddLink("get-guilds");
-                           guilds.AddLink("create-guild");
+                           _ = guilds.AddLink("get-guilds");
+                           _ = guilds.AddLink("create-guild");
                        })
 
                        // map All Api returns of type List<Member> to links with no routeData and no conditional predicate
                        .Configure<List<Member>>(members =>
                        {
-                           members.AddLink("get-members");
-                           members.AddLink("invite-member");
-                           members.AddLink("create-member");
+                           _ = members.AddLink("get-members");
+                           _ = members.AddLink("invite-member");
+                           _ = members.AddLink("create-member");
                        })
 
                        // map type with links for Pagination with no routeData and no conditional predicate
                        .Configure<List<Invite>>(invites =>
                        {
-                           invites.AddLink("get-invites");
-                           invites.AddLink("invite-member");
+                           _ = invites.AddLink("get-invites");
+                           _ = invites.AddLink("invite-member");
                        })
 
                        // map type with links for single objects
                        .Configure<Guild>(guild =>
                        {
-                           guild.AddLink("get-guild").HasRouteData(g => new { id = g.Id });
-                           guild.AddLink("get-members").HasRouteData(g => new { guildId = g.Id });
-                           guild.AddLink("update-guild").HasRouteData(e => new { id = e.Id });
+                           _ = guild.AddLink("get-guild").HasRouteData(g => new { id = g.Id });
+                           _ = guild.AddLink("get-members").HasRouteData(g => new { guildId = g.Id });
+                           _ = guild.AddLink("update-guild").HasRouteData(e => new { id = e.Id });
                        })
                        .Configure<Invite>(invite =>
                        {
-                           invite.AddLink("accept-invite")
+                           _ = invite.AddLink("accept-invite")
                                  .HasRouteData(e => new { id = e.Id })
                                  .When(e => e.Status == InviteStatuses.Pending);
 
-                           invite.AddLink("decline-invite")
+                           _ = invite.AddLink("decline-invite")
                                  .HasRouteData(e => new { id = e.Id })
                                  .When(e => e.Status == InviteStatuses.Pending);
 
-                           invite.AddLink("cancel-invite")
+                           _ = invite.AddLink("cancel-invite")
                                  .HasRouteData(e => new { id = e.Id })
                                  .When(e => e.Status == InviteStatuses.Pending);
 
-                           invite.AddLink("get-invite").HasRouteData(i => new { id = i.Id });
-                           invite.AddLink("get-guild").HasRouteData(i => new { id = i.GuildId });
-                           invite.AddLink("get-member").HasRouteData(i => new { id = i.MemberId });
+                           _ = invite.AddLink("get-invite").HasRouteData(i => new { id = i.Id });
+                           _ = invite.AddLink("get-guild").HasRouteData(i => new { id = i.GuildId });
+                           _ = invite.AddLink("get-member").HasRouteData(i => new { id = i.MemberId });
                        })
                        .Configure<Member>(member =>
                        {
-                           member.AddLink("get-member").HasRouteData(e => new { id = e.Id });
-                           member.AddLink("update-member").HasRouteData(e => new { id = e.Id });
+                           _ = member.AddLink("get-member").HasRouteData(e => new { id = e.Id });
+                           _ = member.AddLink("update-member").HasRouteData(e => new { id = e.Id });
                        })
                        .Configure<Member>(member =>
                        {
-                           member
+                           _ = member
                                .AddLink("get-guild")
                                .HasRouteData(e => new { id = e.GuildId })
                                .When(e => e.GuildId != null);
 
-                           member
+                           _ = member
                                .AddLink("promote-member")
                                .HasRouteData(e => new { id = e.Id })
                                .When(e => e.GuildId != null && !e.IsGuildMaster);
 
-                           member
+                           _ = member
                                .AddLink("demote-member")
                                .HasRouteData(e => new { id = e.Id })
                                .When(e => e.GuildId != null && e.IsGuildMaster);
 
-                           member.AddLink("leave-guild")
+                           _ = member.AddLink("leave-guild")
                                  .HasRouteData(e => new { id = e.Id })
                                  .When(e => e.GuildId != null);
                        });

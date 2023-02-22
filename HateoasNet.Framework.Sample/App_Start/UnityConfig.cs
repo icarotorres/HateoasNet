@@ -1,7 +1,11 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using HateoasNet.Abstractions;
 using HateoasNet.Framework.Sample.HateoasBuilders;
 using HateoasNet.Framework.Sample.JsonData;
-using System;
 using Unity;
 
 namespace HateoasNet.Framework.Sample
@@ -35,7 +39,7 @@ namespace HateoasNet.Framework.Sample
         /// </remarks>
         public static void RegisterTypes(IUnityContainer container)
         {
-            container
+            _ = container
                 .RegisterFactory<IHateoasContext>(f => HateoasConfig.ConfigureFromAssembly(typeof(GuildHateoasBuilder)))
                 .RegisterFactory<IHateoas>(f => new Hateoas(f.Resolve<IHateoasContext>()))
                 .RegisterType<Seeder>();

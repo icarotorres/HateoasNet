@@ -1,4 +1,8 @@
-﻿using System;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -11,7 +15,10 @@ namespace HateoasNet.Extensions
     {
         internal static IDictionary<string, object> ToRouteDictionary(this object source)
         {
-            if (source is IEnumerable) return new Dictionary<string, object>();
+            if (source is IEnumerable)
+            {
+                return new Dictionary<string, object>();
+            }
 
             static object ValueFunction(PropertyInfo info, object source)
             {

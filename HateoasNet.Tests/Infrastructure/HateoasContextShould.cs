@@ -1,9 +1,12 @@
-﻿using FluentAssertions;
-using HateoasNet.Abstractions;
-using HateoasNet.Infrastructure;
-using HateoasNet.Tests.TestHelpers;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Reflection;
+using FluentAssertions;
+using HateoasNet.Abstractions;
+using HateoasNet.Infrastructure;
 using Xunit;
 
 namespace HateoasNet.Tests.Infrastructure
@@ -22,12 +25,11 @@ namespace HateoasNet.Tests.Infrastructure
             GC.SuppressFinalize(this);
         }
 
-
         [Fact]
         [Trait(nameof(IHateoasContext), "New")]
         public void New_WithOutParameters_HateoasContext()
         {
-            _sut.Should().BeAssignableTo<IHateoasContext>().And.BeOfType<HateoasContext>();
+            _ = _sut.Should().BeAssignableTo<IHateoasContext>().And.BeOfType<HateoasContext>();
         }
 
         [Fact]
@@ -39,14 +41,14 @@ namespace HateoasNet.Tests.Infrastructure
             var stronglyTypedHateoasSource = (_sut as HateoasContext)?.GetOrInsert<HateoasSample>();
 
             // assert
-            stronglyTypedHateoasSource.Should().NotBeNull().And.BeSameAs(interfaceHateoasSource);
+            _ = stronglyTypedHateoasSource.Should().NotBeNull().And.BeSameAs(interfaceHateoasSource);
         }
 
         [Fact]
         [Trait(nameof(IHateoasContext), nameof(IHateoasContext.GetApplicableLinkBuilders))]
         public void GetApplicableLinks_WithNotConfiguredType_ReturnEmptyLinkBuilders()
         {
-            _sut.GetApplicableLinkBuilders(new HateoasSample())
+            _ = _sut.GetApplicableLinkBuilders(new HateoasSample())
                 .Should().NotBeNull().And.BeEmpty();
         }
 
@@ -55,9 +57,9 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasContext), nameof(IHateoasContext.GetApplicableLinkBuilders))]
         public void GetApplicableLinks_WithConfiguredType_ReturnLinkBuilders()
         {
-            _sut.Configure<HateoasSample>(source =>
+            _ = _sut.Configure<HateoasSample>(source =>
             {
-                source.AddLink("test")
+                _ = source.AddLink("test")
                         .When(x => x.Id != null && x.Id != Guid.Empty)
                         .HasRouteData(x => new { id = x.Id });
             }).GetApplicableLinkBuilders(new HateoasSample())
@@ -69,7 +71,7 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasContext), nameof(IHateoasContext.GetApplicableLinkBuilders))]
         public void GetApplicableLinks_WithApplyConfigurationForType_ReturnLinkBuilders()
         {
-            _sut.ApplyConfiguration(new HateoasSampleBuilder())
+            _ = _sut.ApplyConfiguration(new HateoasSampleBuilder())
                 .GetApplicableLinkBuilders(new HateoasSample())
                 .Should().NotBeNull().And.NotBeEmpty();
         }
@@ -79,7 +81,7 @@ namespace HateoasNet.Tests.Infrastructure
         [Trait(nameof(IHateoasContext), nameof(IHateoasContext.GetApplicableLinkBuilders))]
         public void GetApplicableLinks_WithTypeConfiguredFromAssembly_ReturnLinkBuilders()
         {
-            _sut.ConfigureFromAssembly(new HateoasSampleBuilder().GetType().Assembly)
+            _ = _sut.ConfigureFromAssembly(new HateoasSampleBuilder().GetType().Assembly)
                 .GetApplicableLinkBuilders(new HateoasSample())
                 .Should().NotBeNull().And.NotBeEmpty();
         }
@@ -93,9 +95,12 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "configuration";
 
             // act
-            Action actual = () => _sut.ApplyConfiguration<HateoasSample>(null);
+            void actual()
+            {
+                _ = _sut.ApplyConfiguration<HateoasSample>(null);
+            }
 
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
 
         [Fact]
@@ -107,10 +112,13 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "source";
 
             // act
-            Action actual = () => _sut.Configure<HateoasSample>(null);
+            void actual()
+            {
+                _ = _sut.Configure<HateoasSample>(null);
+            }
 
             // assert
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
 
         [Fact]
@@ -119,10 +127,13 @@ namespace HateoasNet.Tests.Infrastructure
         public void ConfigureFromAssembly_WhenHasNo_IHateoasSourceConfiguration_ThrowsTargetException()
         {
             // act
-            Action actual = () => _sut.ConfigureFromAssembly(typeof(string).Assembly);
+            void actual()
+            {
+                _ = _sut.ConfigureFromAssembly(typeof(string).Assembly);
+            }
 
             // assert
-            Assert.Throws<TargetException>(actual);
+            _ = Assert.Throws<TargetException>(actual);
         }
 
         [Fact]
@@ -134,10 +145,13 @@ namespace HateoasNet.Tests.Infrastructure
             const string parameterName = "assembly";
 
             // act
-            Action actual = () => _sut.ConfigureFromAssembly(null);
+            void actual()
+            {
+                _ = _sut.ConfigureFromAssembly(null);
+            }
 
             // assert
-            Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
         }
     }
 }

@@ -1,9 +1,13 @@
-﻿using HateoasNet.Framework.Sample.JsonData;
-using HateoasNet.Framework.Sample.Models;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using HateoasNet.Framework.Sample.JsonData;
+using HateoasNet.Framework.Sample.Models;
 
 namespace HateoasNet.Framework.Sample.Controllers
 {
@@ -46,7 +50,11 @@ namespace HateoasNet.Framework.Sample.Controllers
         public IHttpActionResult Accept(Guid id)
         {
             var invite = _invites.SingleOrDefault(i => i.Id == id);
-            if (invite == null) return NotFound();
+            if (invite == null)
+            {
+                return NotFound();
+            }
+
             invite.Status = InviteStatuses.Accepted;
             var links = _hateoas.Generate(invite);
             return Ok(new { data = invite, links });
@@ -56,7 +64,11 @@ namespace HateoasNet.Framework.Sample.Controllers
         public IHttpActionResult Decline(Guid id)
         {
             var invite = _invites.SingleOrDefault(i => i.Id == id);
-            if (invite == null) return NotFound();
+            if (invite == null)
+            {
+                return NotFound();
+            }
+
             invite.Status = InviteStatuses.Declined;
             var links = _hateoas.Generate(invite);
             return Ok(new { data = invite, links });
@@ -66,7 +78,11 @@ namespace HateoasNet.Framework.Sample.Controllers
         public IHttpActionResult Cancel(Guid id)
         {
             var invite = _invites.SingleOrDefault(i => i.Id == id);
-            if (invite == null) return NotFound();
+            if (invite == null)
+            {
+                return NotFound();
+            }
+
             invite.Status = InviteStatuses.Canceled;
             var links = _hateoas.Generate(invite);
             return Ok(new { data = invite, links });

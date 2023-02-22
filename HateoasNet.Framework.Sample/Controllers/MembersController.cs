@@ -1,9 +1,13 @@
-﻿using HateoasNet.Framework.Sample.JsonData;
-using HateoasNet.Framework.Sample.Models;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using HateoasNet.Framework.Sample.JsonData;
+using HateoasNet.Framework.Sample.Models;
 
 namespace HateoasNet.Framework.Sample.Controllers
 {
@@ -53,7 +57,11 @@ namespace HateoasNet.Framework.Sample.Controllers
         public IHttpActionResult Promote(Guid id)
         {
             var member = _members.SingleOrDefault(i => i.Id == id);
-            if (member == null) return NotFound();
+            if (member == null)
+            {
+                return NotFound();
+            }
+
             member.IsGuildMaster = true;
             var links = hateoas.Generate(member);
             return Ok(new { data = member, links });
@@ -63,7 +71,11 @@ namespace HateoasNet.Framework.Sample.Controllers
         public IHttpActionResult Demote(Guid id)
         {
             var member = _members.SingleOrDefault(i => i.Id == id);
-            if (member == null) return NotFound();
+            if (member == null)
+            {
+                return NotFound();
+            }
+
             member.IsGuildMaster = false;
             var links = hateoas.Generate(member);
             return Ok(new { data = member, links });
@@ -73,7 +85,11 @@ namespace HateoasNet.Framework.Sample.Controllers
         public IHttpActionResult LeaveGuild(Guid id)
         {
             var member = _members.SingleOrDefault(i => i.Id == id);
-            if (member == null) return NotFound();
+            if (member == null)
+            {
+                return NotFound();
+            }
+
             member.Guild = null;
             member.GuildId = null;
             var links = hateoas.Generate(member);

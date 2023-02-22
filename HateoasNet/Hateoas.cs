@@ -1,4 +1,8 @@
-﻿using HateoasNet.Abstractions;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using HateoasNet.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,10 +50,15 @@ namespace HateoasNet
 
         private HateoasLink CreateHateoasLink(string routeName, IDictionary<string, object> routeValues, string presentedName)
         {
-            if (string.IsNullOrWhiteSpace(routeName)) throw new ArgumentNullException(nameof(routeName));
+            if (string.IsNullOrWhiteSpace(routeName))
+            {
+                throw new ArgumentNullException(nameof(routeName));
+            }
 
             if (!TryGetActionDescriptorByRouteName(routeName, out var actionDescriptor))
+            {
                 throw new NotSupportedException($"Unable to find route '{routeName}' and respective {nameof(ActionDescriptor)}");
+            }
 
             var href = _urlHelper.Link(routeName, routeValues);
             var method = actionDescriptor.ActionConstraints.OfType<HttpMethodActionConstraint>().First().HttpMethods.First();
@@ -73,7 +82,10 @@ namespace HateoasNet
 
         internal HateoasLink CreateHateoasLink(string routeName, IDictionary<string, object> routeValues, string presentedName)
         {
-            if (string.IsNullOrWhiteSpace(routeName)) throw new ArgumentNullException(nameof(routeName));
+            if (string.IsNullOrWhiteSpace(routeName))
+            {
+                throw new ArgumentNullException(nameof(routeName));
+            }
 
             var routeActionDescriptors = BuildRouteActionDescriptors();
             var href = GetRouteUrl(routeName, routeValues, routeActionDescriptors);
@@ -100,13 +112,23 @@ namespace HateoasNet
         /// <returns>Generated Url <see langword="string" /> value.</returns>
         private string GetRouteUrl(string routeName, IDictionary<string, object> routeValues, Dictionary<RouteAttribute, HttpActionDescriptor> routeActionDescriptors)
         {
-            if (string.IsNullOrWhiteSpace(routeName)) throw new ArgumentNullException(nameof(routeName));
-            if (HttpContext.Current.Request == null) throw new NotSupportedException($"Not supported execution without a current {nameof(HttpContext.Current.Request)}.");
+            if (string.IsNullOrWhiteSpace(routeName))
+            {
+                throw new ArgumentNullException(nameof(routeName));
+            }
+
+            if (HttpContext.Current.Request == null)
+            {
+                throw new NotSupportedException($"Not supported execution without a current {nameof(HttpContext.Current.Request)}.");
+            }
 
             var (routeAttribute, descriptor) = routeActionDescriptors.Where(pair => pair.Key.Name == routeName)
                                                                      .Select(x => (x.Key, x.Value)).First();
 
-            if (descriptor == null) throw new NotSupportedException($"Not found the '{nameof(descriptor)}' for route with name '{routeName}'.");
+            if (descriptor == null)
+            {
+                throw new NotSupportedException($"Not found the '{nameof(descriptor)}' for route with name '{routeName}'.");
+            }
 
             // set source name from controller
             var controllerDescriptor = descriptor.ControllerDescriptor;
@@ -132,7 +154,10 @@ namespace HateoasNet
         /// <returns><see langword="string" />value representing HTTP method.</returns>
         private string GetRouteMethod(string routeName, Dictionary<RouteAttribute, HttpActionDescriptor> routeActionDescriptors)
         {
-            if (string.IsNullOrWhiteSpace(routeName)) throw new ArgumentNullException(nameof(routeName));
+            if (string.IsNullOrWhiteSpace(routeName))
+            {
+                throw new ArgumentNullException(nameof(routeName));
+            }
 
             var descriptor = routeActionDescriptors.Where(pair => pair.Key.Name == routeName)
                                                    .Select(pair => pair.Value)
@@ -146,9 +171,20 @@ namespace HateoasNet
 
         internal string HandleRouteTemplate(string resourceUrl, string template, IDictionary<string, object> routeValues)
         {
-            if (string.IsNullOrWhiteSpace(resourceUrl)) throw new ArgumentNullException(nameof(resourceUrl));
-            if (string.IsNullOrWhiteSpace(template)) return resourceUrl;
-            if (routeValues == null) return $"{resourceUrl}/{template}";
+            if (string.IsNullOrWhiteSpace(resourceUrl))
+            {
+                throw new ArgumentNullException(nameof(resourceUrl));
+            }
+
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                return resourceUrl;
+            }
+
+            if (routeValues == null)
+            {
+                return $"{resourceUrl}/{template}";
+            }
 
             var replacedTemplate = template;
             const string fromRouteVariablePattern = @"\{(.*?)\}";
@@ -161,7 +197,9 @@ namespace HateoasNet
                 {
                     key = Regex.Matches(match.Value, variableIdentifierPattern)[0].Value;
                     if (!routeValues.TryGetValue(key, out replacement))
+                    {
                         throw new InvalidOperationException($"Unable to find key '{key}' from dictionary of route values.");
+                    }
                 }
 
                 replacedTemplate = replacedTemplate.Replace(match.Value, replacement?.ToString());
@@ -172,13 +210,15 @@ namespace HateoasNet
 
         private string HandleQueryStrings(string resourceUrl, string template, IEnumerable<string> parameterNames, IDictionary<string, object> routeValues)
         {
-            if (resourceUrl == null) throw new ArgumentNullException(nameof(resourceUrl));
-            if (routeValues == null) return resourceUrl;
-
-            if (parameterNames == null) throw new ArgumentNullException(nameof(parameterNames));
-            if (template == null) throw new ArgumentNullException(nameof(template));
-
-            return parameterNames
+            return resourceUrl == null
+                ? throw new ArgumentNullException(nameof(resourceUrl))
+                : routeValues == null
+                ? resourceUrl
+                : parameterNames == null
+                ? throw new ArgumentNullException(nameof(parameterNames))
+                : template == null
+                ? throw new ArgumentNullException(nameof(template))
+                : parameterNames
                    .Where(routeValues.ContainsKey)
                    .Where(name => !template.Contains($"{{{name}"))
                    .OrderBy(p => p)

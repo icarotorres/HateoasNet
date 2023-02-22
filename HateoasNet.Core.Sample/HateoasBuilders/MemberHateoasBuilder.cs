@@ -1,4 +1,8 @@
-﻿using HateoasNet.Abstractions;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using HateoasNet.Abstractions;
 using HateoasNet.Core.Sample.Models;
 
 namespace HateoasNet.Core.Sample.HateoasBuilders
@@ -7,25 +11,25 @@ namespace HateoasNet.Core.Sample.HateoasBuilders
     {
         public void Build(IHateoasSource<Member> source)
         {
-            source.AddLink("get-member").HasRouteData(e => new { id = e.Id });
-            source.AddLink("update-member").HasRouteData(e => new { id = e.Id });
+            _ = source.AddLink("get-member").HasRouteData(e => new { id = e.Id });
+            _ = source.AddLink("update-member").HasRouteData(e => new { id = e.Id });
 
-            source
+            _ = source
                 .AddLink("get-guild")
                 .HasRouteData(e => new { id = e.GuildId })
                 .When(e => e.GuildId != null);
 
-            source
+            _ = source
                 .AddLink("promote-member")
                 .HasRouteData(e => new { id = e.Id })
                 .When(e => e.GuildId != null && !e.IsGuildMaster);
 
-            source
+            _ = source
                 .AddLink("demote-member")
                 .HasRouteData(e => new { id = e.Id })
                 .When(e => e.GuildId != null && e.IsGuildMaster);
 
-            source.AddLink("leave-guild")
+            _ = source.AddLink("leave-guild")
                     .HasRouteData(e => new { id = e.Id })
                     .When(e => e.GuildId != null);
         }

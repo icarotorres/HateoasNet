@@ -1,6 +1,10 @@
-﻿using HateoasNet.Abstractions;
-using HateoasNet.Core.Sample.Models;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System.Collections.Generic;
+using HateoasNet.Abstractions;
+using HateoasNet.Core.Sample.Models;
 
 namespace HateoasNet.Core.Sample.HateoasBuilders
 {
@@ -8,8 +12,8 @@ namespace HateoasNet.Core.Sample.HateoasBuilders
     {
         public void Build(IHateoasSource<List<Guild>> source)
         {
-            source.AddLink("get-guilds");
-            source.AddLink("create-guild");
+            _ = source.AddLink("get-guilds");
+            _ = source.AddLink("create-guild");
         }
     }
 }

@@ -1,10 +1,14 @@
-﻿using HateoasNet.Core.Sample.JsonData;
-using HateoasNet.Core.Sample.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using HateoasNet.Core.Sample.JsonData;
+using HateoasNet.Core.Sample.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace HateoasNet.Core.Sample.Controllers
 {

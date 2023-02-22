@@ -1,7 +1,11 @@
-﻿using HateoasNet.Abstractions;
-using HateoasNet.Extensions;
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using System;
 using System.Collections.Generic;
+using HateoasNet.Abstractions;
+using HateoasNet.Extensions;
 
 namespace HateoasNet.Infrastructure
 {
@@ -27,21 +31,21 @@ namespace HateoasNet.Infrastructure
 
         public IDictionary<string, object> GetRouteDictionary(object source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return RouteDictionaryFunction((T)source);
+            return source == null ? throw new ArgumentNullException(nameof(source)) : RouteDictionaryFunction((T)source);
         }
 
         public bool IsApplicable(object source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-
-            return Predicate((T)source);
+            return source == null ? throw new ArgumentNullException(nameof(source)) : Predicate((T)source);
         }
 
         public IHateoasLinkBuilder<T> HasRouteData(Func<T, object> routeDataFunction)
         {
-            if (routeDataFunction == null) throw new ArgumentNullException(nameof(routeDataFunction));
+            if (routeDataFunction == null)
+            {
+                throw new ArgumentNullException(nameof(routeDataFunction));
+            }
+
             RouteDictionaryFunction = source => routeDataFunction(source).ToRouteDictionary();
             return this;
         }
@@ -54,7 +58,11 @@ namespace HateoasNet.Infrastructure
 
         public IHateoasLinkBuilder<T> PresentedAs(string presentedName)
         {
-            if (!string.IsNullOrWhiteSpace(presentedName)) PresentedName = presentedName;
+            if (!string.IsNullOrWhiteSpace(presentedName))
+            {
+                PresentedName = presentedName;
+            }
+
             return this;
         }
     }
