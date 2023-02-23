@@ -45,20 +45,27 @@ steps:
      **/*[Tt]ests.csproj
     arguments: '--configuration $(BuildConfiguration) --no-restore /p:DeployOnBuild=true /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip"'
 
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'test'
+    projects: '**/*[Tt]ests.csproj'
+    testRunTitle: 'Test run'
+
 - task: VSTest@2
   inputs:
-    runInParallel: true
-    codeCoverageEnabled: true
-    diagnosticsEnabled: true
     testSelector: 'testAssemblies'
     testAssemblyVer2: |
-      **\*Tests.dll
+      **\*[Tt]ests.dll
       !**\*TestAdapter.dll
       !**\obj\**
-      !**\testhost.dll
-      !*testhost.dll
+    searchFolder: '$(System.DefaultWorkingDirectory)'
+    runOnlyImpactedTests: false
+    runInParallel: true
+    codeCoverageEnabled: true
+    testRunTitle: 'VS Tests check'
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
+    diagnosticsEnabled: true
 
 - task: SonarCloudAnalyze@1
 
