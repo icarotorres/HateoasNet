@@ -1,0 +1,20 @@
+name: ci-azure-pipelines
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+jobs:
+  azure-devops-ci:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      
+    - name: Azure Pipelines Action
+      uses: Azure/pipelines@v1
+      with:
+        azure-devops-project-url: 'https://dev.azure.com/icarostuart/HateoasNet'
+        azure-pipeline-name: 'HateoasNet SonarCloud'
+        azure-devops-token: '${{ secrets.AZURE_DEVOPS_TOKEN }}'
