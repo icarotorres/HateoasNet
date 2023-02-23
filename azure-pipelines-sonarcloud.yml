@@ -49,6 +49,14 @@ steps:
   inputs:
     runInParallel: true
     codeCoverageEnabled: true
+    diagnosticsEnabled: true
+    testSelector: 'testAssemblies'
+    testAssemblyVer2: |
+      **\*Tests.dll
+      !**\*TestAdapter.dll
+      !**\obj\**
+      !**\testhost.dll
+      !*testhost.dll
     platform: '$(buildPlatform)'
     configuration: '$(buildConfiguration)'
 
