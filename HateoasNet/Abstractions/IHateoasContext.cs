@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -19,7 +19,11 @@ namespace HateoasNet.Abstractions
         /// </summary>
         /// <param name="source">An object used to evaluate the applicability.</param>
         /// <returns><see cref="IEnumerable{IHateoasLink}" /> with all applicable <see cref="IHateoasLinkBuilder" />.</returns>
-        IEnumerable<IHateoasLinkBuilder> GetApplicableLinkBuilders(object source);
+        internal IEnumerable<IHateoasLinkBuilder> GetApplicableLinkBuilders(object source);
+
+        internal IHateoasSource<T> GetOrInsert<T>() where T : class;
+
+        internal IHateoasSource GetOrInsert(Type targetType);
 
         /// <summary>
         ///   Adds or continues an <see cref="IHateoasSource{T}" /> configuration of <typeparamref name="T" /> 

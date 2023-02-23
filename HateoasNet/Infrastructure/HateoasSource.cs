@@ -8,7 +8,7 @@ using HateoasNet.Abstractions;
 
 namespace HateoasNet.Infrastructure
 {
-    /// <inheritdoc cref="IHateoasSource" />
+    /// <inheritdoc cref="IHateoasSource{T}" />
     public sealed class HateoasSource<T> : IHateoasSource<T> where T : class
     {
         private readonly List<IHateoasLinkBuilder> _linkBuilders = new List<IHateoasLinkBuilder>();
@@ -17,7 +17,7 @@ namespace HateoasNet.Infrastructure
         {
         }
 
-        public IEnumerable<IHateoasLinkBuilder> GetLinkBuilders()
+        IEnumerable<IHateoasLinkBuilder> IHateoasSource.GetLinkBuilders()
         {
             return _linkBuilders;
         }

@@ -10,7 +10,7 @@ using HateoasNet.Extensions;
 namespace HateoasNet.Infrastructure
 {
     /// <inheritdoc cref="IHateoasLinkBuilder{T}" />
-    public sealed class HateoasLinkBuilder<T> : IHateoasLinkBuilder<T> where T : class
+    internal sealed class HateoasLinkBuilder<T> : IHateoasLinkBuilder<T> where T : class
     {
         internal HateoasLinkBuilder(string routeName) : this(routeName, _ => null, _ => true)
         {
@@ -26,15 +26,20 @@ namespace HateoasNet.Infrastructure
 
         public string RouteName { get; }
         public string PresentedName { get; private set; }
-        public Func<T, bool> Predicate { get; private set; }
-        public Func<T, IDictionary<string, object>> RouteDictionaryFunction { get; private set; }
 
-        public IDictionary<string, object> GetRouteDictionary(object source)
+        internal Func<T, bool> Predicate { get; private set; }
+        Func<T, bool> IHateoasLinkBuilder<T>.Predicate => Predicate;
+
+
+        internal Func<T, IDictionary<string, object>> RouteDictionaryFunction { get; private set; }
+        Func<T, IDictionary<string, object>> IHateoasLinkBuilder<T>.RouteDictionaryFunction => RouteDictionaryFunction;
+
+        IDictionary<string, object> IHateoasLinkBuilder.GetRouteDictionary(object source)
         {
             return source == null ? throw new ArgumentNullException(nameof(source)) : RouteDictionaryFunction((T)source);
         }
 
-        public bool IsApplicable(object source)
+        public bool IsSatisfiedBy(object source)
         {
             return source == null ? throw new ArgumentNullException(nameof(source)) : Predicate((T)source);
         }

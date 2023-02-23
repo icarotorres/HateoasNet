@@ -78,7 +78,6 @@ namespace HateoasNet.Tests
 
         [Theory]
         [HateoasCoreData]
-        [Trait(nameof(IHateoas), nameof(IHateoas.Generate))]
         public void Generate_ValidParameters_ReturnsHateoasLinks<T>(T data, string routeName, string url, string method) where T : class
         {
             // arrange
@@ -103,7 +102,6 @@ namespace HateoasNet.Tests
 
         [Theory]
         [HateoasFrameworkData]
-        [Trait(nameof(IHateoas), nameof(IHateoas.Generate))]
         public void Generate_ValidParameters_ReturnsHateoasLinks(HateoasTestData mockData)
         {
             // arrange
@@ -121,7 +119,6 @@ namespace HateoasNet.Tests
         }
 
         [Fact]
-        [Trait(nameof(IHateoas), nameof(Hateoas.HandleRouteTemplate))]
         public void Generate_InvalidActionDescriptor_ThrowsEception()
         {
             // arrange
@@ -134,14 +131,8 @@ namespace HateoasNet.Tests
             MockHateoasContext(mockData);
             _sut = new Hateoas(_mockHateoasContext.Object);
 
-            // act
-            void actual()
-            {
-                _ = _sut.HandleRouteTemplate(mockData.ExpectedUrl, mockData.Template, mockData.RouteValues);
-            }
-
             // assert
-            _ = Assert.Throws<InvalidOperationException>(actual);
+            _ = Assert.Throws<InvalidOperationException>(() => _sut.HandleRouteTemplate(mockData.ExpectedUrl, mockData.Template, mockData.RouteValues));
         }
 
         private void MockSutDependencies(HateoasTestData mockData)

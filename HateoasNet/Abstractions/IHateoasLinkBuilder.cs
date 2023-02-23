@@ -40,20 +40,20 @@ namespace HateoasNet.Abstractions
         ///   Generated route values dictionary <see cref="IDictionary{TKey, TValue}" /> of <see langword="string" />,
         ///   <see langword="object" />.
         /// </returns>
-        IDictionary<string, object> GetRouteDictionary(object source);
+        internal IDictionary<string, object> GetRouteDictionary(object source);
 
         /// <summary>
-        ///   Checks if this <see cref="IHateoasLinkBuilder" /> instance is applicable to output of <paramref name="source" /> .
+        ///   Checks if this <see cref="IHateoasLinkBuilder" /> instance is satisfied by <paramref name="source" /> .
         /// </summary>
         /// <param name="source">
-        ///   /// An object to be used as parameter of <see cref="IHateoasLinkBuilder{T}.Predicate" />
+        ///   An object to be used as parameter of <see cref="IHateoasLinkBuilder{T}.Predicate" />
         ///   to evaluate predicate.
         /// </param>
         /// <returns>
         ///   <seealso langword="bool" /> if this <see cref="IHateoasLinkBuilder" /> for <paramref name="source" />
         ///   passes <see cref="IHateoasLinkBuilder{T}.Predicate" /> for applicability.
         /// </returns>
-        bool IsApplicable(object source);
+        bool IsSatisfiedBy(object source);
     }
 
     /// <summary>
@@ -66,12 +66,12 @@ namespace HateoasNet.Abstractions
         ///   A framework function to generate <see cref="IDictionary{TKey, TValue}" /> of <see langword="string" />,
         ///   <see langword="object" /> representing the route values.
         /// </summary>
-        Func<T, IDictionary<string, object>> RouteDictionaryFunction { get; }
+        internal Func<T, IDictionary<string, object>> RouteDictionaryFunction { get; }
 
         /// <summary>
         ///   An user defined predicate function to filter applicability of <see cref="IHateoasLinkBuilder{T}" />.
         /// </summary>
-        Func<T, bool> Predicate { get; }
+        internal Func<T, bool> Predicate { get; }
 
         /// <summary>
         ///   Receives an user defined function returning anonymous <see langword="object" /> for ease usage, converting it to

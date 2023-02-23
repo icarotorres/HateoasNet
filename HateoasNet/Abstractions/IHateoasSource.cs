@@ -16,7 +16,7 @@ namespace HateoasNet.Abstractions
         ///   Gets all <see cref="IHateoasLinkBuilder" /> associated with this <see cref="IHateoasSource" /> instance.
         /// </summary>
         /// <returns><see cref="IEnumerable{IHateoasLink}" /> representing Its Links.</returns>
-        IEnumerable<IHateoasLinkBuilder> GetLinkBuilders();
+        internal IEnumerable<IHateoasLinkBuilder> GetLinkBuilders();
     }
 
     /// <summary>
