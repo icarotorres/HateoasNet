@@ -45,12 +45,6 @@ steps:
      **/*[Tt]ests.csproj
     arguments: '--configuration $(BuildConfiguration) --no-restore /p:DeployOnBuild=true /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:DesktopBuildPackageLocation="$(build.artifactStagingDirectory)\WebApp.zip"'
 
-- task: DotNetCoreCLI@2
-  inputs:
-    command: 'test'
-    projects: '**/*[Tt]ests.csproj'
-    testRunTitle: 'Test run'
-
 - task: VSTest@2
   inputs:
     testSelector: 'testAssemblies'
