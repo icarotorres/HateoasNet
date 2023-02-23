@@ -17,17 +17,10 @@ namespace HateoasNet.Infrastructure
 
         private readonly Dictionary<Type, IHateoasSource> _sources = new Dictionary<Type, IHateoasSource>();
 
+        private IHateoasContext AsInterface => this;
+
         internal HateoasContext()
         {
-        }
-
-        public IEnumerable<IHateoasLinkBuilder> GetApplicableLinkBuilders(object source)
-        {
-            return source == null
-                ? throw new ArgumentNullException(nameof(source))
-                : _sources.TryGetValue(source.GetType(), out var hateoasSource)
-                ? hateoasSource?.GetLinkBuilders().Where(link => link.IsApplicable(source)).ToArray()
-                : Array.Empty<IHateoasLinkBuilder>();
         }
 
         public IHateoasContext Configure<T>(Action<IHateoasSource<T>> source) where T : class
@@ -37,7 +30,7 @@ namespace HateoasNet.Infrastructure
                 throw new ArgumentNullException(nameof(source));
             }
 
-            source(GetOrInsert<T>());
+            source(AsInterface.GetOrInsert<T>());
 
             return this;
         }
@@ -49,7 +42,7 @@ namespace HateoasNet.Infrastructure
                 throw new ArgumentNullException(nameof(configuration));
             }
 
-            configuration.Build(GetOrInsert<T>());
+            configuration.Build(AsInterface.GetOrInsert<T>());
 
             return this;
         }
@@ -72,7 +65,7 @@ namespace HateoasNet.Infrastructure
             {
                 var interfaceType = builderType.GetInterfaces().Single(IsHateoasSourceBuilder);
                 var targetType = interfaceType.GetGenericArguments().First();
-                var hateoasMap = GetOrInsert(targetType);
+                var hateoasMap = AsInterface.GetOrInsert(targetType);
                 var builder = Activator.CreateInstance(builderType);
                 var buildMethod = builderType.GetMethod(nameof(IHateoasSourceBuilder<object>.Build));
                 _ = (buildMethod?.Invoke(builder, new object[] { hateoasMap }));
@@ -81,7 +74,16 @@ namespace HateoasNet.Infrastructure
             return this;
         }
 
-        internal IHateoasSource<T> GetOrInsert<T>() where T : class
+        IEnumerable<IHateoasLinkBuilder> IHateoasContext.GetApplicableLinkBuilders(object source)
+        {
+            return source == null
+                ? throw new ArgumentNullException(nameof(source))
+                : _sources.TryGetValue(source.GetType(), out var hateoasSource)
+                ? hateoasSource?.GetLinkBuilders().Where(link => link.IsSatisfiedBy(source)).ToArray()
+                : Array.Empty<IHateoasLinkBuilder>();
+        }
+
+        IHateoasSource<T> IHateoasContext.GetOrInsert<T>() where T : class
         {
             var targetType = typeof(T);
 
@@ -93,15 +95,13 @@ namespace HateoasNet.Infrastructure
             return _sources[targetType] as IHateoasSource<T>;
         }
 
-        internal IHateoasSource GetOrInsert(Type targetType)
+        IHateoasSource IHateoasContext.GetOrInsert(Type targetType)
         {
-            if (_sources.ContainsKey(targetType))
+            if (!_sources.ContainsKey(targetType))
             {
-                return _sources[targetType];
+                var hateoasSourceType = typeof(HateoasSource<>).MakeGenericType(targetType);
+                _sources.Add(targetType, Activator.CreateInstance(hateoasSourceType, true) as IHateoasSource);
             }
-
-            var hateoasSourceType = typeof(HateoasSource<>).MakeGenericType(targetType);
-            _sources.Add(targetType, Activator.CreateInstance(hateoasSourceType, true) as IHateoasSource);
 
             return _sources[targetType];
         }

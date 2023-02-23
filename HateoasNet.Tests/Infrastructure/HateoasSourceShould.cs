@@ -13,7 +13,7 @@ namespace HateoasNet.Tests.Infrastructure
 {
     public class HateoasSourceShould : IDisposable
     {
-        private readonly HateoasSource<HateoasSample> _sut;
+        private static IHateoasSource<HateoasSample> _sut;
 
         public HateoasSourceShould()
         {
@@ -27,7 +27,6 @@ namespace HateoasNet.Tests.Infrastructure
         }
 
         [Fact]
-        [Trait(nameof(IHateoasSource), "Instance")]
         public void New_WithTypeParameter_CreatesHateoasSource()
         {
             _ = _sut.Should()
@@ -37,14 +36,12 @@ namespace HateoasNet.Tests.Infrastructure
         }
 
         [Fact]
-        [Trait(nameof(IHateoasSource), nameof(IHateoasSource.GetLinkBuilders))]
         public void GetLinks_FromHateoasSource_WithOutConfiguredLinks_ReturnsEmptyLinkBuilders()
         {
             _ = _sut.GetLinkBuilders().Should().BeAssignableTo<IEnumerable<IHateoasLinkBuilder>>().And.BeEmpty();
         }
 
         [Fact]
-        [Trait(nameof(IHateoasSource), nameof(IHateoasSource<HateoasSample>.AddLink))]
         public void HasLink_WithNotEmptyString_ReturnsHateoasLinkBuilder()
         {
             _ = _sut.AddLink("not empty string").Should()
@@ -55,7 +52,6 @@ namespace HateoasNet.Tests.Infrastructure
         }
 
         [Fact]
-        [Trait(nameof(IHateoasSource), nameof(IHateoasSource.GetLinkBuilders))]
         public void GetLinks_FromHateoasSource_WithConfiguredLinks_ReturnsLinkBuilders()
         {
             // arrange
@@ -73,20 +69,9 @@ namespace HateoasNet.Tests.Infrastructure
         [InlineData(null)]
         [InlineData("")]
         [InlineData("    ")]
-        [Trait(nameof(IHateoasSource), nameof(IHateoasSource<HateoasSample>.AddLink))]
-        [Trait(nameof(IHateoasSource), "Exceptions")]
         public void HasLink_WithRouteNameNullOrEmpty_ThrowsArgumentNullException(string routeName)
         {
-            // arrange
-            const string parameterName = "routeName";
-
-            // act
-            void actual()
-            {
-                _ = _sut.AddLink(routeName);
-            }
-
-            _ = Assert.Throws<ArgumentNullException>(parameterName, actual);
+            _ = Assert.Throws<ArgumentNullException>(() => _sut.AddLink(routeName));
         }
     }
 }
