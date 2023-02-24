@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net472;</TargetFrameworks>
+    <TargetFrameworks>net7.0;netcoreapp3.1;net48;net472;</TargetFrameworks>
     <ProjectGuid>{D235EAB8-29B9-422F-9FA0-51730E22DBCA}</ProjectGuid>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>9.0</LangVersion>
     <Title>HateoasNet</Title>
     <Authors>Icaro Torres</Authors>
     <Owners>icarotorres</Owners>
@@ -34,22 +34,22 @@
     </AssemblyAttribute>
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net7.0' Or '$(TargetFramework)' == 'netcoreapp3.1'">
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' Or '$(TargetFramework)' == 'net48'">
 
     <Reference Include="System" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Web" />
     <Reference Include="System.Web.Routing" />
 
-    <PackageReference Include="Microsoft.AspNet.WebApi" Version="5.2.7" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.7" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.7" />
-    <PackageReference Include="Microsoft.AspNet.WebApi.WebHost" Version="5.2.7" />
-    <PackageReference Include="Microsoft.Web.Infrastructure" Version="1.0.0" />
+    <PackageReference Include="Microsoft.AspNet.WebApi" Version="5.2.9" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.Core" Version="5.2.9" />
+    <PackageReference Include="Microsoft.AspNet.WebApi.WebHost" Version="5.2.9" />
+    <PackageReference Include="Microsoft.Web.Infrastructure" Version="2.0.0" />
   </ItemGroup>
 
 </Project>

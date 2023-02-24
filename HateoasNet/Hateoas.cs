@@ -6,12 +6,12 @@ using HateoasNet.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-#if NETCOREAPP3_1
+#if NET7_0 || NETCOREAPP3_1
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Abstractions;
+using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
-#elif NET472
+#elif NET472 || NET48
 using System.Net.Http;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -35,9 +35,7 @@ namespace HateoasNet
                 yield return CreateHateoasLink(linkBuilder.RouteName, linkBuilder.GetRouteDictionary(source), linkBuilder.PresentedName);
             }
         }
-
-#if NETCOREAPP
-
+#if NET7_0 || NETCOREAPP3_1
         private readonly IReadOnlyList<ActionDescriptor> _actionDescriptors;
         private readonly IUrlHelper _urlHelper;
 
@@ -71,9 +69,8 @@ namespace HateoasNet
 
             return descriptor != null;
         }
-
-#elif NET472
-        private readonly RouteAttribute _dummyRouteAttributeInCaseNotFound = new RouteAttribute("unable-to-find-route");
+#elif NET472 || NET48
+        private readonly RouteAttribute _dummyRouteAttributeInCaseNotFound = new("unable-to-find-route");
 
         public Hateoas(IHateoasContext context)
         {
@@ -187,15 +184,15 @@ namespace HateoasNet
             }
 
             var replacedTemplate = template;
-            const string fromRouteVariablePattern = @"\{(.*?)\}";
-            const string variableIdentifierPattern = @"\w(\w|\d|_)*";
+            const string FromRouteVariablePattern = @"\{(.*?)\}";
+            const string VariableIdentifierPattern = @"\w(\w|\d|_)*";
 
-            foreach (Match match in Regex.Matches(replacedTemplate, fromRouteVariablePattern))
+            foreach (Match match in Regex.Matches(replacedTemplate, FromRouteVariablePattern))
             {
                 var key = match.Value.Replace("{", "").Replace("}", "");
                 if (!routeValues.TryGetValue(key, out var replacement))
                 {
-                    key = Regex.Matches(match.Value, variableIdentifierPattern)[0].Value;
+                    key = Regex.Matches(match.Value, VariableIdentifierPattern)[0].Value;
                     if (!routeValues.TryGetValue(key, out replacement))
                     {
                         throw new InvalidOperationException($"Unable to find key '{key}' from dictionary of route values.");
