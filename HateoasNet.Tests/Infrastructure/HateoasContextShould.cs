@@ -55,7 +55,7 @@ namespace HateoasNet.Tests.Infrastructure
             _ = _sut.Configure<HateoasSample>(source =>
             {
                 _ = source.AddLink("test")
-                        .When(x => x.Id != null && x.Id != Guid.Empty)
+                        .When(x => x.Id != Guid.Empty)
                         .HasRouteData(x => new { id = x.Id });
             }).GetApplicableLinkBuilders(new HateoasSample())
               .Should().NotBeNull().And.NotBeEmpty();

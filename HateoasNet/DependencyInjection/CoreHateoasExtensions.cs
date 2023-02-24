@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-#if NETCOREAPP3_1
+#if NET7_0 || NETCOREAPP3_1
 namespace HateoasNet.DependencyInjection.Core
 {
     using System;
@@ -15,22 +15,6 @@ namespace HateoasNet.DependencyInjection.Core
     using Microsoft.AspNetCore.Mvc.Infrastructure;
     using Microsoft.AspNetCore.Mvc.Routing;
     using Microsoft.Extensions.DependencyInjection;
-
-    [ExcludeFromCodeCoverage]
-    internal static class CustomHateoasExtensions
-    {
-        internal static IEnumerable<(TypeInfo, Type)> GetServiceTuplesFromAssemblies(this Assembly[] assemblies)
-        {
-            return assemblies.SelectMany(a => a.DefinedTypes
-                    .Select(t => (t, t.GetInterfaces().SingleOrDefault(IsCustomHateoas)))
-                    .Where(x => x.Item2 != null));
-        }
-
-        internal static bool IsCustomHateoas(Type type)
-        {
-            return type.IsInterface && type.Name.Contains(typeof(IHateoas<>).Name);
-        }
-    }
 
     [ExcludeFromCodeCoverage]
     public static class HateoasExtensions
@@ -63,6 +47,18 @@ namespace HateoasNet.DependencyInjection.Core
             }
 
             return services;
+        }
+
+        internal static IEnumerable<(TypeInfo, Type)> GetServiceTuplesFromAssemblies(this Assembly[] assemblies)
+        {
+            return assemblies.SelectMany(a => a.DefinedTypes
+                    .Select(t => (t, t.GetInterfaces().SingleOrDefault(IsCustomHateoas)))
+                    .Where(x => x.Item2 != null));
+        }
+
+        internal static bool IsCustomHateoas(Type type)
+        {
+            return type.IsInterface && type.Name.Contains(typeof(IHateoas<>).Name);
         }
     }
 }

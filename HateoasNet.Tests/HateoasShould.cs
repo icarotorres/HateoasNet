@@ -10,14 +10,14 @@ using System.Collections.Generic;
 using Xunit;
 using System.Linq;
 using FluentAssertions;
-#if NETCOREAPP3_1
+#if NET7_0 || NETCOREAPP3_1
 using HateoasNet.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
-#elif NET472
+#elif NET472 || NET48
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Net.Http;
@@ -40,7 +40,7 @@ namespace HateoasNet.Tests
             GC.SuppressFinalize(this);
         }
 
-#if NETCOREAPP3_1
+#if NET7_0 || NETCOREAPP3_1
         private readonly Mock<IUrlHelper> _mockUrlHelper;
         private readonly Mock<IActionDescriptorCollectionProvider> _mockActionDescriptorCollectionProvider;
 
@@ -94,7 +94,7 @@ namespace HateoasNet.Tests
                 .BeEquivalentTo(new HateoasLink[] { expected });
         }
 
-#elif NET472
+#elif NET472 || NET48
         public HateoasShould()
         {
             _mockHateoasContext = new Mock<IHateoasContext>().SetupAllProperties();
