@@ -14,11 +14,14 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 #elif NET472 || NET48
 using System.Net.Http;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Routing;
+using System.Web.UI;
 #endif
 
 namespace HateoasNet
@@ -70,7 +73,9 @@ namespace HateoasNet
             return descriptor != null;
         }
 #elif NET472 || NET48
-        private readonly RouteAttribute _dummyRouteAttributeInCaseNotFound = new("unable-to-find-route");
+        private static readonly Regex s_keyFromRouteRegex = new(@"\{(.*?)\}", RegexOptions.Compiled, TimeSpan.FromSeconds(10));
+        private static readonly Regex s_keyFromParameterConstraintsRegex = new(@"\w(\w|\d|_)*", RegexOptions.Compiled, TimeSpan.FromSeconds(10));
+        private static readonly RouteAttribute s_dummyRouteAttributeInCaseNotFound = new("unable-to-find-route");
 
         public Hateoas(IHateoasContext context)
         {
@@ -84,21 +89,28 @@ namespace HateoasNet
                 throw new ArgumentNullException(nameof(routeName));
             }
 
-            var routeActionDescriptors = BuildRouteActionDescriptors();
+            var routeActionDescriptors = GetRouteActionDescriptors(RouteTable.Routes);
             var href = GetRouteUrl(routeName, routeValues, routeActionDescriptors);
             var method = GetRouteMethod(routeName, routeActionDescriptors);
             return new HateoasLink(presentedName, href, method);
         }
 
-        internal Dictionary<RouteAttribute, HttpActionDescriptor> BuildRouteActionDescriptors()
+        internal Dictionary<RouteAttribute, HttpActionDescriptor> GetRouteActionDescriptors(RouteCollection routes)
         {
-            var actionDescriptors = RouteTable
-                                    .Routes
-                                    .OfType<Route>()
-                                    .Select(route => route.DataTokens.Values.OfType<HttpActionDescriptor[]>()
-                                                          .FirstOrDefault()?.First()).Where(x => x != null);
+            var actionDescriptors = routes
+                .OfType<Route>()
+                .Select(route => route.DataTokens.Values.OfType<HttpActionDescriptor[]>()
+                .FirstOrDefault()?.First()).Where(x => x != null);
 
-            return actionDescriptors.ToDictionary(GetRouteAttribute);
+            return actionDescriptors.ToDictionary(GetRouteAttributeOrDefault);
+        }
+
+        internal RouteAttribute GetRouteAttributeOrDefault(HttpActionDescriptor descriptor)
+        {
+            var methodInfo = descriptor.GetType().GetProperty(nameof(MethodInfo))?.GetValue(descriptor) as MethodInfo;
+
+            return methodInfo?.GetCustomAttributes(true).OfType<RouteAttribute>().FirstOrDefault()
+                   ?? s_dummyRouteAttributeInCaseNotFound;
         }
 
         /// <summary>
@@ -109,39 +121,55 @@ namespace HateoasNet
         /// <returns>Generated Url <see langword="string" /> value.</returns>
         private string GetRouteUrl(string routeName, IDictionary<string, object> routeValues, Dictionary<RouteAttribute, HttpActionDescriptor> routeActionDescriptors)
         {
-            if (string.IsNullOrWhiteSpace(routeName))
-            {
-                throw new ArgumentNullException(nameof(routeName));
-            }
-
             if (HttpContext.Current.Request == null)
             {
                 throw new NotSupportedException($"Not supported execution without a current {nameof(HttpContext.Current.Request)}.");
             }
 
-            var (routeAttribute, descriptor) = routeActionDescriptors.Where(pair => pair.Key.Name == routeName)
-                                                                     .Select(x => (x.Key, x.Value)).First();
+            var (routeAttribute, descriptor) = routeActionDescriptors
+                .Where(pair => pair.Key.Name == routeName)
+                .Select(x => (x.Key, x.Value)).First();
 
             if (descriptor == null)
             {
                 throw new NotSupportedException($"Not found the '{nameof(descriptor)}' for route with name '{routeName}'.");
             }
 
-            // set source name from controller
+            var resourceUrlBuilder = new StringBuilder();
+
+            BuildUrlSegments(resourceUrlBuilder, descriptor, HttpContext.Current.Request);
+            BuildUrlScheme(resourceUrlBuilder, HttpContext.Current.Request);
+
+            if (!string.IsNullOrWhiteSpace(routeAttribute.Template) && routeValues != null)
+            {                
+                BuildRouteParameters(resourceUrlBuilder, routeAttribute.Template, routeValues);
+                BuildQueryStrings(resourceUrlBuilder, routeAttribute.Template, routeValues, descriptor);
+            }
+
+            return resourceUrlBuilder.ToString();
+        }
+
+        private void BuildUrlSegments(StringBuilder resourceUrlBuilder, HttpActionDescriptor descriptor, HttpRequest request)
+        {
+            resourceUrlBuilder
+                .Append(request.Url.Authority)
+                .Append("/")
+                .Append(request.ApplicationPath)
+                .Append("/")
+                .Append(GetResourceName(descriptor))
+                .Replace("//", "/");
+        }
+
+        private string GetResourceName(HttpActionDescriptor descriptor)
+        {
             var controllerDescriptor = descriptor.ControllerDescriptor;
             var routePrefixAttribute = controllerDescriptor.GetCustomAttributes<RoutePrefixAttribute>().FirstOrDefault();
-            var resourceName = routePrefixAttribute != null
-                ? routePrefixAttribute.Prefix
-                : controllerDescriptor.ControllerName;
+            return routePrefixAttribute != null ? routePrefixAttribute.Prefix : controllerDescriptor.ControllerName;
+        }
 
-            var request = HttpContext.Current.Request;
-            var segments = $"{request.Url.Authority}{request.ApplicationPath}/{resourceName}".Replace("//", "/");
-            var resourceUrl = $"{request.Url.Scheme}://{segments}";
-
-            resourceUrl = HandleRouteTemplate(resourceUrl, routeAttribute.Template, routeValues);
-
-            var parameters = descriptor.GetParameters().Select(x => x.ParameterName);
-            return HandleQueryStrings(resourceUrl, routeAttribute.Template, parameters, routeValues);
+        private void BuildUrlScheme(StringBuilder resourceUrlBuilder, HttpRequest request)
+        {
+            resourceUrlBuilder.Insert(0, "://").Insert(0, request.Url.Scheme);
         }
 
         /// <summary>
@@ -151,87 +179,43 @@ namespace HateoasNet
         /// <returns><see langword="string" />value representing HTTP method.</returns>
         private string GetRouteMethod(string routeName, Dictionary<RouteAttribute, HttpActionDescriptor> routeActionDescriptors)
         {
-            if (string.IsNullOrWhiteSpace(routeName))
-            {
-                throw new ArgumentNullException(nameof(routeName));
-            }
-
-            var descriptor = routeActionDescriptors.Where(pair => pair.Key.Name == routeName)
-                                                   .Select(pair => pair.Value)
-                                                   .Single();
-
-            var httpMethod = descriptor.SupportedHttpMethods.FirstOrDefault() ??
-                             throw new InvalidOperationException($"Unable to get '{nameof(HttpMethod)}' needed to create the link.");
-
-            return httpMethod.Method;
+            var descriptor = routeActionDescriptors.Single(pair => pair.Key.Name == routeName).Value;
+            return descriptor.SupportedHttpMethods.FirstOrDefault().Method ??
+                throw new InvalidOperationException($"Unable to get '{nameof(HttpMethod)}' needed to create the link.");
         }
 
-        internal string HandleRouteTemplate(string resourceUrl, string template, IDictionary<string, object> routeValues)
+        internal void BuildRouteParameters(StringBuilder resourceUrlBuilder, string template, IDictionary<string, object> routeValues)
         {
-            if (string.IsNullOrWhiteSpace(resourceUrl))
+            resourceUrlBuilder.Append("/").Append(template);
+            foreach (Match match in s_keyFromRouteRegex.Matches(template))
             {
-                throw new ArgumentNullException(nameof(resourceUrl));
-            }
+                var keyFromRouteParameter = match.Value.Replace("{", "").Replace("}", "");
+                var parameterNotFoundOrHasConstraints = !routeValues.TryGetValue(keyFromRouteParameter, out var replacement);
 
-            if (string.IsNullOrWhiteSpace(template))
-            {
-                return resourceUrl;
-            }
-
-            if (routeValues == null)
-            {
-                return $"{resourceUrl}/{template}";
-            }
-
-            var replacedTemplate = template;
-            const string FromRouteVariablePattern = @"\{(.*?)\}";
-            const string VariableIdentifierPattern = @"\w(\w|\d|_)*";
-
-            foreach (Match match in Regex.Matches(replacedTemplate, FromRouteVariablePattern))
-            {
-                var key = match.Value.Replace("{", "").Replace("}", "");
-                if (!routeValues.TryGetValue(key, out var replacement))
+                if (parameterNotFoundOrHasConstraints)
                 {
-                    key = Regex.Matches(match.Value, VariableIdentifierPattern)[0].Value;
-                    if (!routeValues.TryGetValue(key, out replacement))
+                    var keyFromParameterWithConstraints = s_keyFromParameterConstraintsRegex.Matches(match.Value)[0].Value;
+                    if (!routeValues.TryGetValue(keyFromParameterWithConstraints, out replacement))
                     {
-                        throw new InvalidOperationException($"Unable to find key '{key}' from dictionary of route values.");
+                        throw new InvalidOperationException($"Unable to find key '{keyFromParameterWithConstraints}' from dictionary of route values.");
                     }
                 }
-
-                replacedTemplate = replacedTemplate.Replace(match.Value, replacement?.ToString());
+                resourceUrlBuilder.Replace(match.Value, replacement?.ToString());
             }
-
-            return $"{resourceUrl}/{replacedTemplate}";
         }
 
-        private string HandleQueryStrings(string resourceUrl, string template, IEnumerable<string> parameterNames, IDictionary<string, object> routeValues)
+        private void BuildQueryStrings(StringBuilder resourceUrlBuilder, string template, IDictionary<string, object> routeValues, HttpActionDescriptor descriptor)
         {
-            return resourceUrl == null
-                ? throw new ArgumentNullException(nameof(resourceUrl))
-                : routeValues == null
-                ? resourceUrl
-                : parameterNames == null
-                ? throw new ArgumentNullException(nameof(parameterNames))
-                : template == null
-                ? throw new ArgumentNullException(nameof(template))
-                : parameterNames
-                   .Where(routeValues.ContainsKey)
-                   .Where(name => !template.Contains($"{{{name}"))
-                   .OrderBy(p => p)
-                   .Aggregate(resourceUrl, (query, parameterName) =>
-                   {
-                       var symbol = query == resourceUrl ? "?" : "&";
-                       return $"{query}{symbol}{parameterName}={routeValues[parameterName]}";
-                   });
-        }
-
-        private RouteAttribute GetRouteAttribute(HttpActionDescriptor descriptor)
-        {
-            var methodInfo = descriptor.GetType().GetProperty(nameof(MethodInfo))?.GetValue(descriptor) as MethodInfo;
-
-            return methodInfo?.GetCustomAttributes(true).OfType<RouteAttribute>().FirstOrDefault()
-                   ?? _dummyRouteAttributeInCaseNotFound;
+            var parameterCounter = 0;
+            foreach (var parameter in descriptor.GetParameters())
+            {
+                if (routeValues.ContainsKey(parameter.ParameterName) && !template.Contains($"{{{parameter.ParameterName}"))
+                {
+                    var symbol = parameterCounter == 0 ? "?" : "&";
+                    resourceUrlBuilder.Append(symbol).Append(routeValues[parameter.ParameterName]);
+                    parameterCounter++;
+                }
+            }
         }
 #endif
     }
