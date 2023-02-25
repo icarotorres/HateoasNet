@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Xunit;
 using System.Linq;
 using FluentAssertions;
+using System.Text;
 #if NET7_0 || NETCOREAPP3_1
 using HateoasNet.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
@@ -105,8 +106,10 @@ namespace HateoasNet.Tests
         public void Generate_ValidParameters_ReturnsHateoasLinks(HateoasTestData mockData)
         {
             // arrange
-            var expected = new HateoasLink(mockData.RouteName, mockData.ExpectedUrl, mockData.Method);
-            MockSutDependencies(mockData);
+            var expected = new HateoasLink(mockData.RouteName, mockData.ExpectedUrl, mockData.Method.Method);
+            MockHateoasContext(mockData);
+            MockHttpContextAndActionDescriptors(mockData);
+            _sut = new Hateoas(_mockHateoasContext.Object);
 
             // act
             var links = _sut.Generate(mockData.RouteValues).ToArray();
@@ -118,28 +121,50 @@ namespace HateoasNet.Tests
                 .BeEquivalentTo(new HateoasLink[] { expected });
         }
 
-        [Fact]
-        public void Generate_InvalidActionDescriptor_ThrowsEception()
+        [Theory]
+        [InlineData(
+            "id,cpf,admin",
+            "10/12345678900/false",
+            "{id:int}/cpf/{cpf:length(11)}/admin/{admin:bool}",
+            "10/cpf/12345678900/admin/false")]
+        [InlineData(
+            "id,name,active",
+            "D3CF664E-5267-4D17-9DCA-3374307C122A/sample_user/true",
+            "{id:guid}/name/{name:maxlength(15)}/active/{active:bool}",
+            "D3CF664E-5267-4D17-9DCA-3374307C122A/name/sample_user/active/true")]
+        public void BuildRouteParameters_RouteValuesWithRouteParameter_BuildExpectedString(string keys, string values, string routeTemplate, string expected)
         {
             // arrange
-            var mockData = new HateoasTestData(
-                "sample-exception",
-                "exceptions",
-                "GET",
-                new Dictionary<string, object> { { "diferentKey", "diferentValue" } },
-                "{otherValue}");
-            MockHateoasContext(mockData);
+            var randomPrefixUrl = $"https://Random/{Guid.NewGuid()}/prefix/";
+            var routeUrlBuilder = new StringBuilder(randomPrefixUrl);
+            var keyArray = keys.Split(',');
+            var valuesArray = values.Split('/');
+            var routeValues = new Dictionary<string, object>(keyArray.Length);
+            foreach (var (key, value) in keyArray.Zip(valuesArray, (k, v) => (k, v)))
+            {
+                routeValues[key] = value;
+            }
+            _sut = new Hateoas(_mockHateoasContext.Object);
+
+            // act
+            _sut.BuildRouteParameters(routeUrlBuilder, routeTemplate, routeValues);
+            var actual = routeUrlBuilder.ToString();
+
+            // assert
+            actual.Should().Contain(expected);
+        }
+
+        [Theory]
+        [InlineData("{keyNotInRouteValues}", "keyInRouteValues")]
+        [InlineData("{keyInRouteValues}/{keyNotInRouteValues}", "keyInRouteValues")]
+        public void BuildRouteParameters_RouteValuesMissingRouteParameter_ThrowsException(string routeTemplate, string key)
+        {
+            // arrange
+            var routeValues = new Dictionary<string, object> { [key] = null };
             _sut = new Hateoas(_mockHateoasContext.Object);
 
             // assert
-            _ = Assert.Throws<InvalidOperationException>(() => _sut.HandleRouteTemplate(mockData.ExpectedUrl, mockData.Template, mockData.RouteValues));
-        }
-
-        private void MockSutDependencies(HateoasTestData mockData)
-        {
-            MockHateoasContext(mockData);
-            MockHttpContextAndActionDescriptors(mockData);
-            _sut = new Hateoas(_mockHateoasContext.Object);
+            _ = Assert.Throws<InvalidOperationException>(() => _sut.BuildRouteParameters(new StringBuilder(), routeTemplate, routeValues));
         }
 
         private void MockHateoasContext(HateoasTestData mockData)
@@ -159,8 +184,7 @@ namespace HateoasNet.Tests
         {
             var config = new Mock<HttpConfiguration>().Object;
             var prefix = new RoutePrefixAttribute(mockData.Prefix);
-            var controllerDescriptor =
-                new TestControllerDescriptor(config, mockData.ControllerName, typeof(ApiController), prefix);
+            var controllerDescriptor = new TestControllerDescriptor(config, mockData.ControllerName, typeof(ApiController), prefix);
             var actionParameters =
                 mockData.RouteValues.Keys.Aggregate(new Collection<HttpParameterDescriptor>(),
                 (collection, parameterName) =>
@@ -172,7 +196,7 @@ namespace HateoasNet.Tests
                 });
             var methodInfo = new TestMethodInfo(new RouteAttribute(mockData.Template) { Name = mockData.RouteName });
             var actionDescriptor = new TestActionDescriptor(controllerDescriptor, methodInfo, actionParameters);
-            actionDescriptor.SupportedHttpMethods.Add(new HttpMethod(mockData.Method));
+            actionDescriptor.SupportedHttpMethods.Add(mockData.Method);
             var dataTokens = new RouteValueDictionary
             {
                 { "descriptors", new[] { actionDescriptor } }
