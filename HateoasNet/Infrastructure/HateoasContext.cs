@@ -76,9 +76,9 @@ namespace HateoasNet.Infrastructure
 
         IEnumerable<IHateoasLinkBuilder> IHateoasContext.GetApplicableLinkBuilders(object source)
         {
-            return source == null
-                ? throw new ArgumentNullException(nameof(source))
-                : _sources.TryGetValue(source.GetType(), out var hateoasSource)
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
+            return _sources.TryGetValue(source.GetType(), out var hateoasSource)
                 ? hateoasSource?.GetLinkBuilders().Where(link => link.IsSatisfiedBy(source)).ToArray()
                 : Array.Empty<IHateoasLinkBuilder>();
         }
