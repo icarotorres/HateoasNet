@@ -7,17 +7,18 @@ using System.Collections.Generic;
 using FluentAssertions;
 using HateoasNet.Abstractions;
 using HateoasNet.Infrastructure;
+using HateoasNet.Tests.TestHelpers;
 using Xunit;
 
 namespace HateoasNet.Tests.Infrastructure
 {
     public class HateoasSourceShould : IDisposable
     {
-        private static IHateoasSource<HateoasSample> _sut;
+        private readonly IHateoasSource<HateoasTestData> _sut;
 
         public HateoasSourceShould()
         {
-            _sut = new HateoasSource<HateoasSample>();
+            _sut = new HateoasSource<HateoasTestData>();
         }
 
         /// <inheritdoc />
@@ -31,8 +32,8 @@ namespace HateoasNet.Tests.Infrastructure
         {
             _ = _sut.Should()
                 .BeAssignableTo<IHateoasSource>().And
-                .BeAssignableTo<IHateoasSource<HateoasSample>>().And
-                .BeOfType<HateoasSource<HateoasSample>>();
+                .BeAssignableTo<IHateoasSource<HateoasTestData>>().And
+                .BeOfType<HateoasSource<HateoasTestData>>();
         }
 
         [Fact]
@@ -47,8 +48,8 @@ namespace HateoasNet.Tests.Infrastructure
             _ = _sut.AddLink("not empty string").Should()
                 .NotBeNull().And
                 .BeAssignableTo<IHateoasLinkBuilder>().And
-                .BeAssignableTo<IHateoasLinkBuilder<HateoasSample>>().And
-                .BeOfType<HateoasLinkBuilder<HateoasSample>>();
+                .BeAssignableTo<IHateoasLinkBuilder<HateoasTestData>>().And
+                .BeOfType<HateoasLinkBuilder<HateoasTestData>>();
         }
 
         [Fact]
@@ -57,8 +58,8 @@ namespace HateoasNet.Tests.Infrastructure
             // arrange
             var linkBuilder = _sut.AddLink("not empty string").Should()
                 .BeAssignableTo<IHateoasLinkBuilder>().And
-                .BeAssignableTo<IHateoasLinkBuilder<HateoasSample>>().And
-                .BeOfType<HateoasLinkBuilder<HateoasSample>>().Subject;
+                .BeAssignableTo<IHateoasLinkBuilder<HateoasTestData>>().And
+                .BeOfType<HateoasLinkBuilder<HateoasTestData>>().Subject;
 
             _ = _sut.GetLinkBuilders().Should()
                 .BeAssignableTo<IEnumerable<IHateoasLinkBuilder>>().And

@@ -14,10 +14,10 @@ namespace HateoasNet.Tests.Infrastructure
 {
     public class HateoasLinkBuilderShould : IDisposable
     {
-        private readonly IHateoasLinkBuilder<HateoasSample> _sut;
+        private readonly IHateoasLinkBuilder<HateoasTestData> _sut;
         public HateoasLinkBuilderShould()
         {
-            _sut = new HateoasLinkBuilder<HateoasSample>("test");
+            _sut = new HateoasLinkBuilder<HateoasTestData>("test");
         }
 
         public void Dispose()
@@ -37,22 +37,22 @@ namespace HateoasNet.Tests.Infrastructure
         public void New_WithValidParameters_ReturnsHateoasLink()
         {
             _ = _sut.Should()
-                .BeAssignableTo<HateoasLinkBuilder<HateoasSample>>().And
-                .BeAssignableTo<IHateoasLinkBuilder<HateoasSample>>().And
-                .BeOfType<HateoasLinkBuilder<HateoasSample>>();
+                .BeAssignableTo<HateoasLinkBuilder<HateoasTestData>>().And
+                .BeAssignableTo<IHateoasLinkBuilder<HateoasTestData>>().And
+                .BeOfType<HateoasLinkBuilder<HateoasTestData>>();
         }
 
         [Fact]
         public void HasRouteData_WithValidRouteDataFunction_ReturnIHateoasLink()
         {
-            _ = _sut.HasRouteData(x => new { id = x.Id, foreignKey = x.ForeignKeyId });
+            _ = _sut.HasRouteData(x => new { name = x.RouteName, controller = x.ControllerName });
 
             _ = _sut.RouteDictionaryFunction.Should().NotBeNull();
         }
 
         [Theory]
         [WhenData]
-        public void IsApplicable_PredicateFunction_ReturnsSameValue(HateoasSample data, Func<HateoasSample, bool> function)
+        public void IsApplicable_PredicateFunction_ReturnsSameValue(HateoasTestData data, Func<HateoasTestData, bool> function)
         {
             _ = _sut.When(function).IsSatisfiedBy(data).Should().Be(function(data));
         }
@@ -67,9 +67,9 @@ namespace HateoasNet.Tests.Infrastructure
         [Fact]
         public void GetRouteDictionary_HasRouteDataParameterFunction_ReturnsSameValue()
         {
-            var data = new HateoasSample();
-            var linkBuilder = _sut.HasRouteData(x => new { id = x.Id, foreignKey = x.ForeignKeyId });
-            var expected = new { id = data.Id, foreignKey = data.ForeignKeyId }.ToRouteDictionary();
+            var data = HateoasTestData.Valid(0, 0).Generate();
+            var linkBuilder = _sut.HasRouteData(x => new { name = x.RouteName, controller = x.ControllerName });
+            var expected = new { name = data.RouteName, controller = data.ControllerName }.ToRouteDictionary();
 
             _sut.GetRouteDictionary(data).Should().BeEquivalentTo(expected);
         }

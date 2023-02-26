@@ -14,12 +14,12 @@ namespace HateoasNet.Tests.TestHelpers
         /// <inheritdoc />
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
-            var testee = new HateoasSample();
+            var data = HateoasTestData.Valid(1, 1).Generate();
 
-            yield return new object[] { testee, new Func<HateoasSample, bool>(x => !string.IsNullOrWhiteSpace(x.Email)) };
-            yield return new object[] { testee, new Func<HateoasSample, bool>(x => !string.IsNullOrWhiteSpace(x.DocumentNumber)) };
-            yield return new object[] { testee, new Func<HateoasSample, bool>(x => !string.IsNullOrWhiteSpace(x.FileName)) };
-            yield return new object[] { testee, new Func<HateoasSample, bool>(x => x.ForeignKeyId != Guid.Empty) };
+            yield return new object[] { data, new Func<HateoasTestData, bool>(x => !string.IsNullOrWhiteSpace(x.Prefix)) };
+            yield return new object[] { data, new Func<HateoasTestData, bool>(x => !string.IsNullOrWhiteSpace(x.RouteName)) };
+            yield return new object[] { data, new Func<HateoasTestData, bool>(x => !string.IsNullOrWhiteSpace(x.Template)) };
+            yield return new object[] { data, new Func<HateoasTestData, bool>(x => x.ExpectedUrl != data.ExpectedUrl) };
         }
     }
 }
