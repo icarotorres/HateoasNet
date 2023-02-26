@@ -14,14 +14,12 @@ using Microsoft.AspNetCore.Mvc.Infrastructure;
 #elif NET472 || NET48
 using System.Net.Http;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Routing;
-using System.Web.UI;
 #endif
 
 namespace HateoasNet
@@ -31,13 +29,10 @@ namespace HateoasNet
     {
         private readonly IHateoasContext _context;
 
-        public IEnumerable<HateoasLink> Generate(object source)
-        {
-            foreach (var linkBuilder in _context.GetApplicableLinkBuilders(source))
-            {
-                yield return CreateHateoasLink(linkBuilder.RouteName, linkBuilder.GetRouteDictionary(source), linkBuilder.PresentedName);
-            }
-        }
+        public IEnumerable<HateoasLink> Generate(object source) => _context.GetApplicableLinkBuilders(source)
+            .Select(x => CreateHateoasLink(x.RouteName, x.GetRouteDictionary(source), x.PresentedName))
+            .ToArray();
+
 #if NET7_0 || NETCOREAPP3_1
         private readonly IReadOnlyList<ActionDescriptor> _actionDescriptors;
         private readonly IUrlHelper _urlHelper;
@@ -82,7 +77,7 @@ namespace HateoasNet
             _context = context;
         }
 
-        internal HateoasLink CreateHateoasLink(string routeName, IDictionary<string, object> routeValues, string presentedName)
+        private HateoasLink CreateHateoasLink(string routeName, IDictionary<string, object> routeValues, string presentedName)
         {
             if (string.IsNullOrWhiteSpace(routeName))
             {
@@ -95,7 +90,7 @@ namespace HateoasNet
             return new HateoasLink(presentedName, href, method);
         }
 
-        internal Dictionary<RouteAttribute, HttpActionDescriptor> GetRouteActionDescriptors(RouteCollection routes)
+        private Dictionary<RouteAttribute, HttpActionDescriptor> GetRouteActionDescriptors(RouteCollection routes)
         {
             var actionDescriptors = routes
                 .OfType<Route>()
@@ -105,30 +100,18 @@ namespace HateoasNet
             return actionDescriptors.ToDictionary(GetRouteAttributeOrDefault);
         }
 
-        internal RouteAttribute GetRouteAttributeOrDefault(HttpActionDescriptor descriptor)
+        private RouteAttribute GetRouteAttributeOrDefault(HttpActionDescriptor descriptor)
         {
             var methodInfo = descriptor.GetType().GetProperty(nameof(MethodInfo))?.GetValue(descriptor) as MethodInfo;
 
-            return methodInfo?.GetCustomAttributes(true).OfType<RouteAttribute>().FirstOrDefault()
-                   ?? s_dummyRouteAttributeInCaseNotFound;
+            return methodInfo?.GetCustomAttributes(true).OfType<RouteAttribute>().FirstOrDefault() ?? s_dummyRouteAttributeInCaseNotFound;
         }
 
-        /// <summary>
-        ///   Builds an url <see langword="string" /> with the <paramref name="routeName" /> and <paramref name="routeValues" />.
-        /// </summary>
-        /// <param name="routeName">Name of desired route to discover the url.</param>
-        /// <param name="routeValues">Route dictionary to look for parameters and query strings.</param>
-        /// <returns>Generated Url <see langword="string" /> value.</returns>
         private string GetRouteUrl(string routeName, IDictionary<string, object> routeValues, Dictionary<RouteAttribute, HttpActionDescriptor> routeActionDescriptors)
         {
-            if (HttpContext.Current.Request == null)
-            {
-                throw new NotSupportedException($"Not supported execution without a current {nameof(HttpContext.Current.Request)}.");
-            }
-
             var (routeAttribute, descriptor) = routeActionDescriptors
                 .Where(pair => pair.Key.Name == routeName)
-                .Select(x => (x.Key, x.Value)).First();
+                .Select(x => (x.Key, x.Value)).FirstOrDefault();
 
             if (descriptor == null)
             {
@@ -139,9 +122,8 @@ namespace HateoasNet
 
             BuildUrlSegments(resourceUrlBuilder, descriptor, HttpContext.Current.Request);
             BuildUrlScheme(resourceUrlBuilder, HttpContext.Current.Request);
-
-            if (!string.IsNullOrWhiteSpace(routeAttribute.Template) && routeValues != null)
-            {                
+            if (routeValues != null)
+            {
                 BuildRouteParameters(resourceUrlBuilder, routeAttribute.Template, routeValues);
                 BuildQueryStrings(resourceUrlBuilder, routeAttribute.Template, routeValues, descriptor);
             }
@@ -172,11 +154,6 @@ namespace HateoasNet
             resourceUrlBuilder.Insert(0, "://").Insert(0, request.Url.Scheme);
         }
 
-        /// <summary>
-        ///   Find the <see langword="string" /> value of HTTP method of a route with given <paramref name="routeName" />.
-        /// </summary>
-        /// <param name="routeName">The wanted endpoint route name to find.</param>
-        /// <returns><see langword="string" />value representing HTTP method.</returns>
         private string GetRouteMethod(string routeName, Dictionary<RouteAttribute, HttpActionDescriptor> routeActionDescriptors)
         {
             var descriptor = routeActionDescriptors.Single(pair => pair.Key.Name == routeName).Value;
@@ -184,8 +161,12 @@ namespace HateoasNet
                 throw new InvalidOperationException($"Unable to get '{nameof(HttpMethod)}' needed to create the link.");
         }
 
-        internal void BuildRouteParameters(StringBuilder resourceUrlBuilder, string template, IDictionary<string, object> routeValues)
+        private void BuildRouteParameters(StringBuilder resourceUrlBuilder, string template, IDictionary<string, object> routeValues)
         {
+            if (string.IsNullOrEmpty(template))
+            {
+                return;
+            }
             resourceUrlBuilder.Append("/").Append(template);
             foreach (Match match in s_keyFromRouteRegex.Matches(template))
             {
@@ -206,13 +187,18 @@ namespace HateoasNet
 
         private void BuildQueryStrings(StringBuilder resourceUrlBuilder, string template, IDictionary<string, object> routeValues, HttpActionDescriptor descriptor)
         {
+            template ??= string.Empty;
             var parameterCounter = 0;
-            foreach (var parameter in descriptor.GetParameters())
+            foreach (var queryString in descriptor.GetParameters().Select(x => x.ParameterName))
             {
-                if (routeValues.ContainsKey(parameter.ParameterName) && !template.Contains($"{{{parameter.ParameterName}"))
+                if (routeValues.ContainsKey(queryString) && !template.Contains($"{{{queryString}"))
                 {
                     var symbol = parameterCounter == 0 ? "?" : "&";
-                    resourceUrlBuilder.Append(symbol).Append(routeValues[parameter.ParameterName]);
+                    resourceUrlBuilder
+                        .Append(symbol)
+                        .Append(queryString)
+                        .Append("=")
+                        .Append(routeValues[queryString]);
                     parameterCounter++;
                 }
             }
