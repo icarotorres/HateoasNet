@@ -7,12 +7,14 @@ using System.Reflection;
 using FluentAssertions;
 using HateoasNet.Abstractions;
 using HateoasNet.Infrastructure;
+using HateoasNet.Tests.TestHelpers;
 using Xunit;
 
 namespace HateoasNet.Tests.Infrastructure
 {
     public class HateoasContextShould : IDisposable
     {
+        private static readonly HateoasTestData data = HateoasTestData.Valid(0, 0).Generate();
         private readonly IHateoasContext _sut;
         public HateoasContextShould()
         {
@@ -35,8 +37,8 @@ namespace HateoasNet.Tests.Infrastructure
         public void GetOrInsert_WithClassType_ReturnIHateoasSource()
         {
             // act
-            var interfaceHateoasSource = _sut.GetOrInsert(typeof(HateoasSample));
-            var stronglyTypedHateoasSource = _sut.GetOrInsert<HateoasSample>();
+            var interfaceHateoasSource = _sut.GetOrInsert(typeof(HateoasTestData));
+            var stronglyTypedHateoasSource = _sut.GetOrInsert<HateoasTestData>();
 
             // assert
             _ = stronglyTypedHateoasSource.Should().NotBeNull().And.BeSameAs(interfaceHateoasSource);
@@ -45,48 +47,60 @@ namespace HateoasNet.Tests.Infrastructure
         [Fact]
         public void GetApplicableLinks_WithNotConfiguredType_ReturnEmptyLinkBuilders()
         {
-            _ = _sut.GetApplicableLinkBuilders(new HateoasSample())
+            _ = _sut.GetApplicableLinkBuilders(data)
                 .Should().NotBeNull().And.BeEmpty();
         }
 
         [Fact]
-        public void GetApplicableLinks_WithConfiguredType_ReturnLinkBuilders()
+        public void GetApplicableLinks_WithConfiguredTypeAndValidCondition_ReturnLinkBuilders()
         {
-            _ = _sut.Configure<HateoasSample>(source =>
+            _ = _sut.Configure<HateoasTestData>(source =>
             {
                 _ = source.AddLink("test")
-                        .When(x => x.Id != Guid.Empty)
-                        .HasRouteData(x => new { id = x.Id });
-            }).GetApplicableLinkBuilders(new HateoasSample())
+                        .When(x => !string.IsNullOrEmpty(x.ControllerName))
+                        .HasRouteData(x => new { controller = x.ControllerName });
+            }).GetApplicableLinkBuilders(data)
               .Should().NotBeNull().And.NotBeEmpty();
+        }
+
+        [Fact]
+        public void GetApplicableLinks_WithConfiguredTypeAndInvalidCondition_ReturnEmptyLinkBuilders()
+        {
+            _ = _sut.Configure<HateoasTestData>(source =>
+            {
+                _ = source.AddLink("test")
+                        .When(x => !string.IsNullOrEmpty(x.ControllerName))
+                        .HasRouteData(x => new { controller = x.ControllerName });
+            }).GetApplicableLinkBuilders(new HateoasTestData())
+              .Should().NotBeNull().And.BeEmpty();
         }
 
         [Fact]
         public void GetApplicableLinks_WithApplyConfigurationForType_ReturnLinkBuilders()
         {
-            _ = _sut.ApplyConfiguration(new HateoasSampleBuilder())
-                .GetApplicableLinkBuilders(new HateoasSample())
+            _ = _sut.ApplyConfiguration(new HateoasTestDataBuilder())
+                .GetApplicableLinkBuilders(data)
                 .Should().NotBeNull().And.NotBeEmpty();
         }
 
         [Fact]
         public void GetApplicableLinks_WithTypeConfiguredFromAssembly_ReturnLinkBuilders()
         {
-            _ = _sut.ConfigureFromAssembly(new HateoasSampleBuilder().GetType().Assembly)
-                .GetApplicableLinkBuilders(new HateoasSample())
+            _ = _sut.ConfigureFromAssembly(typeof(HateoasTestDataBuilder).Assembly)
+                .GetApplicableLinkBuilders(data)
                 .Should().NotBeNull().And.NotBeEmpty();
         }
 
         [Fact]
         public void ApplyConfiguration_WithResourceNull_ThrowsArgumentNullException()
         {
-            _ = Assert.Throws<ArgumentNullException>(() =>_sut.ApplyConfiguration<HateoasSample>(null));
+            _ = Assert.Throws<ArgumentNullException>(() => _sut.ApplyConfiguration<HateoasTestData>(null));
         }
 
         [Fact]
         public void Configure_WithResourceNull_ThrowsArgumentNullException()
         {
-            _ = Assert.Throws<ArgumentNullException>(() => _sut.Configure<HateoasSample>(null));
+            _ = Assert.Throws<ArgumentNullException>(() => _sut.Configure<HateoasTestData>(null));
         }
 
         [Fact]
