@@ -14,10 +14,10 @@ namespace HateoasNet.Tests.Infrastructure
 {
     public class HateoasLinkBuilderShould : IDisposable
     {
-        private readonly IHateoasLinkBuilder<HateoasTestData> _sut;
+        private readonly IHateoasLinkBuilder<TestData> _sut;
         public HateoasLinkBuilderShould()
         {
-            _sut = new HateoasLinkBuilder<HateoasTestData>("test");
+            _sut = new HateoasLinkBuilder<TestData>("test");
         }
 
         public void Dispose()
@@ -37,9 +37,9 @@ namespace HateoasNet.Tests.Infrastructure
         public void New_WithValidParameters_ReturnsHateoasLink()
         {
             _ = _sut.Should()
-                .BeAssignableTo<HateoasLinkBuilder<HateoasTestData>>().And
-                .BeAssignableTo<IHateoasLinkBuilder<HateoasTestData>>().And
-                .BeOfType<HateoasLinkBuilder<HateoasTestData>>();
+                .BeAssignableTo<HateoasLinkBuilder<TestData>>().And
+                .BeAssignableTo<IHateoasLinkBuilder<TestData>>().And
+                .BeOfType<HateoasLinkBuilder<TestData>>();
         }
 
         [Fact]
@@ -52,7 +52,7 @@ namespace HateoasNet.Tests.Infrastructure
 
         [Theory]
         [WhenData]
-        public void IsApplicable_PredicateFunction_ReturnsSameValue(HateoasTestData data, Func<HateoasTestData, bool> function)
+        public void IsApplicable_PredicateFunction_ReturnsSameValue(TestData data, Func<TestData, bool> function)
         {
             _ = _sut.When(function).IsSatisfiedBy(data).Should().Be(function(data));
         }
@@ -67,7 +67,8 @@ namespace HateoasNet.Tests.Infrastructure
         [Fact]
         public void GetRouteDictionary_HasRouteDataParameterFunction_ReturnsSameValue()
         {
-            var data = HateoasTestData.Valid(0, 0).Generate();
+            var data = new TestData();
+            TestData.Faker.Populate(data, TestData.RuleSets.PrefixOnly);
             var linkBuilder = _sut.HasRouteData(x => new { name = x.RouteName, controller = x.ControllerName });
             var expected = new { name = data.RouteName, controller = data.ControllerName }.ToRouteDictionary();
 
