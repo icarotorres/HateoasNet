@@ -1,6 +1,8 @@
 name: ci-azure-pipelines
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main, develop]
     types: [opened, synchronize, reopened]
