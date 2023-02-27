@@ -8,10 +8,8 @@ using Moq;
 using System;
 using System.Collections.Generic;
 using Xunit;
-using System.Linq;
 using FluentAssertions;
 #if NET7_0 || NETCOREAPP3_1
-using HateoasNet.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Abstractions;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
@@ -20,12 +18,11 @@ using Microsoft.AspNetCore.Mvc.Routing;
 #elif NET472 || NET48
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Net.Http;
+using System.Linq;
 using System.Web;
 using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Routing;
-using System.Text;
 
 #endif
 namespace HateoasNet.Tests
@@ -33,6 +30,7 @@ namespace HateoasNet.Tests
     public class HateoasShould : IDisposable
     {
         private Hateoas _sut;
+        private readonly TestData _data;
         private readonly Mock<IHateoasContext> _mockHateoasContext;
 
         /// <inheritdoc />
@@ -45,9 +43,8 @@ namespace HateoasNet.Tests
         public void Generate_NullRouteName_ThrowsArgumentNullException()
         {
             // arrange
-            var mockData = HateoasTestData.Valid(0, 0).Generate();
-            mockData.RouteName = null;
-            MockHateoasContext(mockData);
+            TestData.Faker.Populate(_data, TestData.RuleSets.RouteNameNull);
+            MockHateoasContext();
 
 #if NET7_0 || NETCOREAPP3_1
             MockEmptyActionDescriptor();
@@ -57,31 +54,32 @@ namespace HateoasNet.Tests
 #endif
 
             // act & assert
-            _ = Assert.Throws<ArgumentNullException>(() => _sut.Generate(mockData.RouteValues));
+            _ = Assert.Throws<ArgumentNullException>(() => _sut.Generate(_data.RouteValues));
         }
 
         [Theory]
-        [InlineData(3, 0)]
-        [InlineData(2, 2)]
-        [InlineData(0, 3)]
-        public void Generate_ValidParameters_ReturnsHateoasLinks(int parametersCount, int queryStringsCount)
+        [InlineData(TestData.RuleSets.PrefixOnly)]
+        [InlineData(TestData.RuleSets.RouteTemplate)]
+        [InlineData(TestData.RuleSets.QueryStrings)]
+        [InlineData(TestData.RuleSets.Complete)]
+        public void Generate_ValidParameters_ReturnsHateoasLinks(string rulesets)
         {
             // arrange
-            var mockData = HateoasTestData.Valid(parametersCount, queryStringsCount).Generate();
-            var expected = new HateoasLink(mockData.RouteName, mockData.ExpectedUrl, mockData.Method.Method);
-            MockHateoasContext(mockData);
+            TestData.Faker.Populate(_data, rulesets);
+            var expected = new HateoasLink(_data.RouteName, _data.ExpectedUrl, _data.Method.Method);
+            MockHateoasContext();
 
 #if NET7_0 || NETCOREAPP3_1
-            _ = _mockUrlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns(mockData.ExpectedUrl);
-            MockActionDescriptor(mockData);
+            _ = _mockUrlHelper.Setup(x => x.Link(It.IsAny<string>(), It.IsAny<object>())).Returns(_data.ExpectedUrl);
+            MockActionDescriptor();
             _sut = new Hateoas(_mockHateoasContext.Object, _mockUrlHelper.Object, _mockActionDescriptorCollectionProvider.Object);
 #elif NET472 || NET48
-            MockHttpContextAndActionDescriptors(mockData);
+            MockHttpContextAndActionDescriptors();
             _sut = new Hateoas(_mockHateoasContext.Object);
 #endif
 
             // act
-            var links = _sut.Generate(mockData.RouteValues);
+            var links = _sut.Generate(_data.RouteValues);
 
             // assert
             _ = links.Should()
@@ -90,15 +88,15 @@ namespace HateoasNet.Tests
                 .BeEquivalentTo(new HateoasLink[] { expected });
         }
 
-        private void MockHateoasContext(HateoasTestData mockData)
+        private void MockHateoasContext()
         {
             var mockLinkBuilder = new Mock<IHateoasLinkBuilder>();
-            _ = mockLinkBuilder.Setup(x => x.RouteName).Returns(mockData.RouteName);
-            _ = mockLinkBuilder.Setup(x => x.PresentedName).Returns(mockData.RouteName);
-            _ = mockLinkBuilder.Setup(x => x.GetRouteDictionary(It.IsAny<object>())).Returns(mockData.RouteValues);
+            _ = mockLinkBuilder.Setup(x => x.RouteName).Returns(_data.RouteName);
+            _ = mockLinkBuilder.Setup(x => x.PresentedName).Returns(_data.RouteName);
+            _ = mockLinkBuilder.Setup(x => x.GetRouteDictionary(It.IsAny<object>())).Returns(_data.RouteValues);
 
             _ = _mockHateoasContext
-                .Setup(x => x.GetApplicableLinkBuilders(mockData.RouteValues))
+                .Setup(x => x.GetApplicableLinkBuilders(_data.RouteValues))
                 .Returns(new IHateoasLinkBuilder[] { mockLinkBuilder.Object });
         }
 
@@ -108,6 +106,7 @@ namespace HateoasNet.Tests
 
         public HateoasShould()
         {
+            _data = new TestData();
             _mockHateoasContext = new Mock<IHateoasContext>().SetupAllProperties();
             _mockActionDescriptorCollectionProvider = new Mock<IActionDescriptorCollectionProvider>().SetupAllProperties();
             _mockUrlHelper = new Mock<IUrlHelper>().SetupAllProperties();
@@ -117,25 +116,25 @@ namespace HateoasNet.Tests
         public void Generate_ActionDescriptorNotFound_ThrowsArgumentNullException()
         {
             // arrange
-            var mockData = HateoasTestData.Valid(0, 0).Generate();
-            MockHateoasContext(mockData);
+            TestData.Faker.Populate(_data, TestData.RuleSets.PrefixOnly);
+            MockHateoasContext();
             MockEmptyActionDescriptor();
             _sut = new Hateoas(_mockHateoasContext.Object, _mockUrlHelper.Object, _mockActionDescriptorCollectionProvider.Object);
 
             // act & assert
-            _ = Assert.Throws<NotSupportedException>(() => _sut.Generate(mockData.RouteValues));
+            _ = Assert.Throws<NotSupportedException>(() => _sut.Generate(_data.RouteValues));
         }
 
-        private void MockActionDescriptor(HateoasTestData mockData)
+        private void MockActionDescriptor()
         {
             var actionDescriptors = new List<ActionDescriptor>
             {
                 new ActionDescriptor
                 {
-                    AttributeRouteInfo = new AttributeRouteInfo {Name = mockData.RouteName},
+                    AttributeRouteInfo = new AttributeRouteInfo {Name = _data.RouteName},
                     ActionConstraints = new List<IActionConstraintMetadata>
                     {
-                        new HttpMethodActionConstraint(new[] {mockData.Method.Method})
+                        new HttpMethodActionConstraint(new[] {_data.Method.Method})
                     }
                 }
             };
@@ -154,6 +153,7 @@ namespace HateoasNet.Tests
 #elif NET472 || NET48
         public HateoasShould()
         {
+            _data = new TestData();
             _mockHateoasContext = new Mock<IHateoasContext>().SetupAllProperties();
         }
 
@@ -161,35 +161,35 @@ namespace HateoasNet.Tests
         public void Generate_HttpActionDescriptorNull_ThrowsArgumentNullException()
         {
             // arrange
-            var mockData = HateoasTestData.Valid(1, 1).Generate();
-            MockHateoasContext(mockData);
+            TestData.Faker.Populate(_data, TestData.RuleSets.PrefixOnly);
+            MockHateoasContext();
             // not mocking ActionDescriptor resulting on it being null
             _sut = new Hateoas(_mockHateoasContext.Object);
 
             // act & assert
-            _ = Assert.Throws<NotSupportedException>(() => _sut.Generate(mockData.RouteValues));
+            _ = Assert.Throws<NotSupportedException>(() => _sut.Generate(_data.RouteValues));
         }
 
         [Fact]
         public void Generate_InvalidParameterNotInRouteValues_ThrowsException()
         {
             // arrange
-            var mockData = HateoasTestData.InvalidParameterNotInRouteValues("qweasdzxc").Generate();
-            MockHateoasContext(mockData);
-            MockHttpContextAndActionDescriptors(mockData);
+            TestData.Faker.Populate(_data, TestData.RuleSets.ParameterNotInRouteValues);
+            MockHateoasContext();
+            MockHttpContextAndActionDescriptors();
             _sut = new Hateoas(_mockHateoasContext.Object);
 
             // act & assert
-            _ = Assert.Throws<InvalidOperationException>(() => _sut.Generate(mockData.RouteValues));
+            _ = Assert.Throws<InvalidOperationException>(() => _sut.Generate(_data.RouteValues));
         }
 
-        private void MockHttpContextAndActionDescriptors(HateoasTestData mockData)
+        private void MockHttpContextAndActionDescriptors()
         {
             var config = new Mock<HttpConfiguration>().Object;
-            var prefix = new RoutePrefixAttribute(mockData.Prefix);
-            var controllerDescriptor = new TestControllerDescriptor(config, mockData.ControllerName, typeof(ApiController), prefix);
+            var prefix = new RoutePrefixAttribute(_data.Prefix);
+            var controllerDescriptor = new TestControllerDescriptor(config, _data.ControllerName, typeof(ApiController), prefix);
             var actionParameters =
-                mockData.QueryStrings.Aggregate(new Collection<HttpParameterDescriptor>(),
+                _data.QueryStrings.Aggregate(new Collection<HttpParameterDescriptor>(),
                 (collection, parameterName) =>
                 {
                     var mockParameterDescriptor = new Mock<HttpParameterDescriptor>();
@@ -197,16 +197,16 @@ namespace HateoasNet.Tests
                     collection.Add(mockParameterDescriptor.Object);
                     return collection;
                 });
-            var methodInfo = new TestMethodInfo(new RouteAttribute(mockData.Template) { Name = mockData.RouteName });
+            var methodInfo = new TestMethodInfo(new RouteAttribute(_data.Template) { Name = _data.RouteName });
             var actionDescriptor = new TestActionDescriptor(controllerDescriptor, methodInfo, actionParameters);
-            actionDescriptor.SupportedHttpMethods.Add(mockData.Method);
+            actionDescriptor.SupportedHttpMethods.Add(_data.Method);
             var dataTokens = new RouteValueDictionary
             {
                 { "descriptors", new[] { actionDescriptor } }
             };
 
-            RouteTable.Routes.Add(new Route(mockData.RoutePath, null) { DataTokens = dataTokens });
-            var request = new HttpRequest("", mockData.BaseUrl, "");
+            RouteTable.Routes.Add(new Route(_data.RoutePath, null) { DataTokens = dataTokens });
+            var request = new HttpRequest(string.Empty, _data.BaseUrl, string.Empty);
             var response = new HttpResponse(new StringWriter());
             HttpContext.Current = new HttpContext(request, response);
         }

@@ -14,11 +14,11 @@ namespace HateoasNet.Tests.Infrastructure
 {
     public class HateoasSourceShould : IDisposable
     {
-        private readonly IHateoasSource<HateoasTestData> _sut;
+        private readonly IHateoasSource<TestData> _sut;
 
         public HateoasSourceShould()
         {
-            _sut = new HateoasSource<HateoasTestData>();
+            _sut = new HateoasSource<TestData>();
         }
 
         /// <inheritdoc />
@@ -32,8 +32,8 @@ namespace HateoasNet.Tests.Infrastructure
         {
             _ = _sut.Should()
                 .BeAssignableTo<IHateoasSource>().And
-                .BeAssignableTo<IHateoasSource<HateoasTestData>>().And
-                .BeOfType<HateoasSource<HateoasTestData>>();
+                .BeAssignableTo<IHateoasSource<TestData>>().And
+                .BeOfType<HateoasSource<TestData>>();
         }
 
         [Fact]
@@ -48,8 +48,8 @@ namespace HateoasNet.Tests.Infrastructure
             _ = _sut.AddLink("not empty string").Should()
                 .NotBeNull().And
                 .BeAssignableTo<IHateoasLinkBuilder>().And
-                .BeAssignableTo<IHateoasLinkBuilder<HateoasTestData>>().And
-                .BeOfType<HateoasLinkBuilder<HateoasTestData>>();
+                .BeAssignableTo<IHateoasLinkBuilder<TestData>>().And
+                .BeOfType<HateoasLinkBuilder<TestData>>();
         }
 
         [Fact]
@@ -58,8 +58,8 @@ namespace HateoasNet.Tests.Infrastructure
             // arrange
             var linkBuilder = _sut.AddLink("not empty string").Should()
                 .BeAssignableTo<IHateoasLinkBuilder>().And
-                .BeAssignableTo<IHateoasLinkBuilder<HateoasTestData>>().And
-                .BeOfType<HateoasLinkBuilder<HateoasTestData>>().Subject;
+                .BeAssignableTo<IHateoasLinkBuilder<TestData>>().And
+                .BeOfType<HateoasLinkBuilder<TestData>>().Subject;
 
             _ = _sut.GetLinkBuilders().Should()
                 .BeAssignableTo<IEnumerable<IHateoasLinkBuilder>>().And
