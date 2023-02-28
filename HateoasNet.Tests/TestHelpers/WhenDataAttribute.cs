@@ -14,13 +14,13 @@ namespace HateoasNet.Tests.TestHelpers
         /// <inheritdoc />
         public override IEnumerable<object[]> GetData(MethodInfo testMethod)
         {
-            var data = new TestData();
-            TestData.Faker.Populate(data, TestData.RuleSets.Complete);
+            var data = new Testdata();
+            Fakers.Testdata.Populate(data, Fakers.RuleSets.Complete);
 
-            yield return new object[] { data, new Func<TestData, bool>(x => !string.IsNullOrWhiteSpace(x.Prefix)) };
-            yield return new object[] { data, new Func<TestData, bool>(x => !string.IsNullOrWhiteSpace(x.RouteName)) };
-            yield return new object[] { data, new Func<TestData, bool>(x => !string.IsNullOrWhiteSpace(x.Template)) };
-            yield return new object[] { data, new Func<TestData, bool>(x => x.ExpectedUrl != data.ExpectedUrl) };
+            yield return new object[] { data, new Func<Testdata, bool>(x => !string.IsNullOrWhiteSpace(x.Prefix)) };
+            yield return new object[] { data, new Func<Testdata, bool>(x => !string.IsNullOrWhiteSpace(x.RouteName)) };
+            yield return new object[] { data, new Func<Testdata, bool>(x => !string.IsNullOrWhiteSpace(x.Template)) };
+            yield return new object[] { data, new Func<Testdata, bool>(x => x.ExpectedUrl != data.ExpectedUrl) };
         }
     }
 }
